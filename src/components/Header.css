@@ -1,6 +1,5 @@
 .site-header {
   background: #ffffff;
-  border-bottom: 2px solid #c60800;
   padding: 0;
   position: sticky;
   top: 0;
@@ -19,6 +18,14 @@
 
 .logo-section {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 32px;
+  color: #c60800;
 }
 
 .site-logo {
@@ -39,6 +46,8 @@
 
 .main-navigation {
   position: relative;
+  background: #c60800;
+  border-radius: 0;
 }
 
 .menu-toggle {
@@ -58,6 +67,7 @@
   display: flex;
   align-items: center;
   gap: 0;
+  background: #c60800;
 }
 
 .nav-item {
@@ -66,20 +76,20 @@
 
 .nav-link {
   display: block;
-  padding: 15px 20px;
+  padding: 12px 20px;
   text-decoration: none;
-  color: #333333;
+  color: #ffffff;
   font-family: 'Roboto', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 13px;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
+  text-transform: capitalize;
   transition: all 0.3s ease;
 }
 
 .nav-link:hover {
-  color: #c60800;
-  background-color: #f8f8f8;
+  color: #ffffff;
+  background-color: rgba(255,255,255,0.1);
 }
 
 .dropdown {
