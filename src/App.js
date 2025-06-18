@@ -1,10 +1,12 @@
 import './App.css';
-import WordPressAPI from './WordPressAPI';
+import Header from './components/Header';
+import Homepage from './components/Homepage';
 
 function App() {
   return (
     <div className="App">
-      <WordPressAPI />
+      <Header />
+      <Homepage />
     </div>
   );
 }
