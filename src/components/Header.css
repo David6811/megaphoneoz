@@ -1,0 +1,249 @@
+.site-header {
+  background: #ffffff;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: none;
+  border-bottom: none;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px;
+  background: #ffffff;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 36px;
+  color: #c60800;
+}
+
+.site-logo {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  letter-spacing: 1.2px;
+}
+
+.logo-text {
+  color: #333333;
+}
+
+.logo-accent {
+  color: #c60800;
+}
+
+.main-navigation {
+  width: 100vw;
+  background: #c60800;
+  border-radius: 0;
+  margin-left: calc(-50vw + 50%);
+}
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #c60800;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.nav-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: #c60800;
+  width: 100%;
+}
+
+.nav-item {
+  position: relative;
+}
+
+.nav-link {
+  display: block;
+  padding: 15px 25px;
+  text-decoration: none;
+  color: #ffffff;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: capitalize;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(255,255,255,0.1);
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-top: 2px solid #c60800;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 1001;
+}
+
+.dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-link {
+  display: block;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #333333;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  text-transform: none;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.dropdown-link:hover {
+  color: #c60800;
+  background-color: #f8f8f8;
+  padding-left: 25px;
+}
+
+.dropdown-menu li:last-child .dropdown-link {
+  border-bottom: none;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .logo-section {
+    padding: 10px 15px;
+    justify-content: space-between;
+  }
+  
+  .site-logo {
+    font-size: 24px;
+  }
+  
+  .menu-toggle {
+    display: block;
+  }
+  
+  .main-navigation {
+    position: relative;
+  }
+  
+  .nav-menu {
+    position: absolute;
+    top: 0;
+    right: 15px;
+    background: #c60800;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    flex-direction: column;
+    align-items: stretch;
+    width: 250px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    padding: 0;
+    z-index: 1000;
+  }
+  
+  .nav-menu-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  
+  .nav-item {
+    width: 100%;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .nav-item:last-child {
+    border-bottom: none;
+  }
+  
+  .nav-link {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    color: #ffffff;
+  }
+  
+  .nav-item:last-child .nav-link {
+    border-bottom: none;
+  }
+  
+  .dropdown-menu {
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    box-shadow: none;
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    background: #f8f8f8;
+  }
+  
+  .dropdown:hover .dropdown-menu {
+    display: block;
+  }
+  
+  .dropdown-link {
+    padding: 10px 30px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-logo {
+    font-size: 20px;
+  }
+  
+  .nav-menu {
+    width: calc(100vw - 30px);
+    right: 15px;
+  }
+}
