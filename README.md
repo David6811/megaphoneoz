@@ -1,6 +1,24 @@
-# Getting Started with Create React App
+# MegaphoneOZ React Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a React application for MegaphoneOZ news website with WordPress integration.
+
+## WordPress Menu Integration
+
+The application dynamically loads navigation menus from WordPress REST API.
+
+### WordPress Credentials
+- **Username**: `oliverwen.sydney@gmail.com`
+- **Application Password**: `UDCX Qq5E aCls lusr d9BM LZ0Q`
+- **API Endpoint**: `https://megaphoneoz.com/wp-json/wp/v2/menu-items`
+
+### Configuration
+Menu credentials are configured in `src/services/wordpressMenuService.ts`. To update:
+
+1. Generate new application password in WordPress admin → Users → Profile → Application Passwords
+2. Update credentials in `wordpressMenuService.ts` constructor
+3. Rebuild application
+
+The app includes fallback to hardcoded menu if WordPress API fails.
 
 ## Available Scripts
 

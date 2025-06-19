@@ -26,10 +26,18 @@ export interface FeaturedSliderProps {
 export interface NavigationItem {
   label: string;
   href: string;
+  hasDropdown?: boolean;
   dropdown?: NavigationDropdownItem[];
 }
 
 export interface NavigationDropdownItem {
+  label: string;
+  href: string;
+  hasSubmenu?: boolean;
+  submenu?: NavigationSubmenuItem[];
+}
+
+export interface NavigationSubmenuItem {
   label: string;
   href: string;
 }
