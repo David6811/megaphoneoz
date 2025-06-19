@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FeaturedSliderProps, SlideData } from '../types';
+import { FeaturedSliderProps, SlideData } from '../../types';
 import './FeaturedSlider.css';
 
 const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ slides = [] }) => {

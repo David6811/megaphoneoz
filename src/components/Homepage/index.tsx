@@ -1,6 +1,6 @@
 import React from 'react';
-import FeaturedSlider from './FeaturedSlider';
-import { HomepageProps, SlideData, Article, Comment } from '../types';
+import FeaturedSlider from '../FeaturedSlider';
+import { HomepageProps, SlideData, Article, Comment } from '../../types';
 import './Homepage.css';
 
 const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {

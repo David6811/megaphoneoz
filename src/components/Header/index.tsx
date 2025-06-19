@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, useTheme, Box, Container } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { HeaderProps, NavigationItem } from '../types';
+import { HeaderProps, NavigationItem } from '../../types';
 
 const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
