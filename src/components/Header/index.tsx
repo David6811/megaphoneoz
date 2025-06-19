@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, useTheme, Box, Container, Drawer, List, ListItem, ListItemText, useMediaQuery } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, useTheme, Box, Container, Drawer, List, ListItem, ListItemText, useMediaQuery, Collapse } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { HeaderProps, NavigationItem, NavigationDropdownItem } from '../../types';
 
@@ -12,6 +13,7 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const [artsAnchorEl, setArtsAnchorEl] = useState<null | HTMLElement>(null);
   const [hoveredSubmenu, setHoveredSubmenu] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [expandedMenus, setExpandedMenus] = useState<{ [key: string]: boolean }>({});
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -89,6 +91,14 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
+    setExpandedMenus({});
+  };
+
+  const toggleSubmenu = (menuLabel: string) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuLabel]: !prev[menuLabel]
+    }));
   };
 
   const renderVerticalMenu = (categories: NavigationDropdownItem[]) => {
@@ -387,6 +397,7 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                 <ListItem 
                   component={item.hasDropdown ? "div" : "a"}
                   href={!item.hasDropdown ? item.href : undefined}
+                  onClick={item.hasDropdown ? () => toggleSubmenu(item.label) : closeMobileMenu}
                   sx={{ 
                     cursor: 'pointer',
                     '&:hover': { backgroundColor: 'rgba(198, 8, 0, 0.05)' }
@@ -402,36 +413,19 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                     }}
                   />
                   {item.hasDropdown && (
-                    <ExpandMoreIcon sx={{ color: theme.palette.primary.main }} />
+                    expandedMenus[item.label] ? 
+                      <ExpandLessIcon sx={{ color: theme.palette.primary.main }} /> :
+                      <ExpandMoreIcon sx={{ color: theme.palette.primary.main }} />
                   )}
                 </ListItem>
                 
-                {/* Mobile Submenus */}
+                {/* Mobile Submenus with Collapse */}
                 {item.hasDropdown && (
-                  <Box sx={{ pl: 2, backgroundColor: '#f5f5f5' }}>
-                    {item.label === 'News' && newsCategories.map((category, catIndex) => (
-                      <ListItem 
-                        key={catIndex}
-                        component="a" 
-                        href={category.href}
-                        onClick={closeMobileMenu}
-                        sx={{ py: 1 }}
-                      >
-                        <ListItemText 
-                          primary={category.label}
-                          sx={{ 
-                            '& .MuiTypography-root': { 
-                              fontSize: '0.9rem',
-                              color: theme.palette.text.secondary
-                            }
-                          }}
-                        />
-                      </ListItem>
-                    ))}
-                    
-                    {item.label === 'Lifestyle' && lifestyleCategories.map((category, catIndex) => (
-                      <Box key={catIndex}>
+                  <Collapse in={expandedMenus[item.label]} timeout="auto" unmountOnExit>
+                    <Box sx={{ pl: 2, backgroundColor: '#f5f5f5' }}>
+                      {item.label === 'News' && newsCategories.map((category, catIndex) => (
                         <ListItem 
+                          key={catIndex}
                           component="a" 
                           href={category.href}
                           onClick={closeMobileMenu}
@@ -446,79 +440,112 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                               }
                             }}
                           />
-                          {category.hasSubmenu && <ChevronRightIcon sx={{ fontSize: '1rem' }} />}
                         </ListItem>
-                        {category.hasSubmenu && category.submenu && (
-                          <Box sx={{ pl: 2 }}>
-                            {category.submenu.map((subitem, subIndex) => (
-                              <ListItem 
-                                key={subIndex}
-                                component="a" 
-                                href={subitem.href}
-                                onClick={closeMobileMenu}
-                                sx={{ py: 0.5, pl: 4 }}
-                              >
-                                <ListItemText 
-                                  primary={subitem.label}
-                                  sx={{ 
-                                    '& .MuiTypography-root': { 
-                                      fontSize: '0.8rem',
-                                      color: theme.palette.text.disabled
-                                    }
-                                  }}
-                                />
-                              </ListItem>
-                            ))}
-                          </Box>
-                        )}
-                      </Box>
-                    ))}
-                    
-                    {item.label === 'Arts and Entertainment' && artsCategories.map((category, catIndex) => (
-                      <Box key={catIndex}>
-                        <ListItem 
-                          component="a" 
-                          href={category.href}
-                          onClick={closeMobileMenu}
-                          sx={{ py: 1 }}
-                        >
-                          <ListItemText 
-                            primary={category.label}
-                            sx={{ 
-                              '& .MuiTypography-root': { 
-                                fontSize: '0.9rem',
-                                color: theme.palette.text.secondary
-                              }
-                            }}
-                          />
-                          {category.hasSubmenu && <ChevronRightIcon sx={{ fontSize: '1rem' }} />}
-                        </ListItem>
-                        {category.hasSubmenu && category.submenu && (
-                          <Box sx={{ pl: 2 }}>
-                            {category.submenu.map((subitem, subIndex) => (
-                              <ListItem 
-                                key={subIndex}
-                                component="a" 
-                                href={subitem.href}
-                                onClick={closeMobileMenu}
-                                sx={{ py: 0.5, pl: 4 }}
-                              >
-                                <ListItemText 
-                                  primary={subitem.label}
-                                  sx={{ 
-                                    '& .MuiTypography-root': { 
-                                      fontSize: '0.8rem',
-                                      color: theme.palette.text.disabled
-                                    }
-                                  }}
-                                />
-                              </ListItem>
-                            ))}
-                          </Box>
-                        )}
-                      </Box>
-                    ))}
-                  </Box>
+                      ))}
+                      
+                      {item.label === 'Lifestyle' && lifestyleCategories.map((category, catIndex) => (
+                        <Box key={catIndex}>
+                          <ListItem 
+                            component={category.hasSubmenu ? "div" : "a"}
+                            href={!category.hasSubmenu ? category.href : undefined}
+                            onClick={category.hasSubmenu ? () => toggleSubmenu(`${item.label}-${category.label}`) : closeMobileMenu}
+                            sx={{ py: 1, cursor: 'pointer' }}
+                          >
+                            <ListItemText 
+                              primary={category.label}
+                              sx={{ 
+                                '& .MuiTypography-root': { 
+                                  fontSize: '0.9rem',
+                                  color: theme.palette.text.secondary
+                                }
+                              }}
+                            />
+                            {category.hasSubmenu && (
+                              expandedMenus[`${item.label}-${category.label}`] ?
+                                <ExpandLessIcon sx={{ fontSize: '1rem', color: theme.palette.primary.main }} /> :
+                                <ExpandMoreIcon sx={{ fontSize: '1rem', color: theme.palette.primary.main }} />
+                            )}
+                          </ListItem>
+                          {category.hasSubmenu && category.submenu && (
+                            <Collapse in={expandedMenus[`${item.label}-${category.label}`]} timeout="auto" unmountOnExit>
+                              <Box sx={{ pl: 2, backgroundColor: '#eeeeee' }}>
+                                {category.submenu.map((subitem, subIndex) => (
+                                  <ListItem 
+                                    key={subIndex}
+                                    component="a" 
+                                    href={subitem.href}
+                                    onClick={closeMobileMenu}
+                                    sx={{ py: 0.5, pl: 4 }}
+                                  >
+                                    <ListItemText 
+                                      primary={subitem.label}
+                                      sx={{ 
+                                        '& .MuiTypography-root': { 
+                                          fontSize: '0.8rem',
+                                          color: theme.palette.text.disabled
+                                        }
+                                      }}
+                                    />
+                                  </ListItem>
+                                ))}
+                              </Box>
+                            </Collapse>
+                          )}
+                        </Box>
+                      ))}
+                      
+                      {item.label === 'Arts and Entertainment' && artsCategories.map((category, catIndex) => (
+                        <Box key={catIndex}>
+                          <ListItem 
+                            component={category.hasSubmenu ? "div" : "a"}
+                            href={!category.hasSubmenu ? category.href : undefined}
+                            onClick={category.hasSubmenu ? () => toggleSubmenu(`${item.label}-${category.label}`) : closeMobileMenu}
+                            sx={{ py: 1, cursor: 'pointer' }}
+                          >
+                            <ListItemText 
+                              primary={category.label}
+                              sx={{ 
+                                '& .MuiTypography-root': { 
+                                  fontSize: '0.9rem',
+                                  color: theme.palette.text.secondary
+                                }
+                              }}
+                            />
+                            {category.hasSubmenu && (
+                              expandedMenus[`${item.label}-${category.label}`] ?
+                                <ExpandLessIcon sx={{ fontSize: '1rem', color: theme.palette.primary.main }} /> :
+                                <ExpandMoreIcon sx={{ fontSize: '1rem', color: theme.palette.primary.main }} />
+                            )}
+                          </ListItem>
+                          {category.hasSubmenu && category.submenu && (
+                            <Collapse in={expandedMenus[`${item.label}-${category.label}`]} timeout="auto" unmountOnExit>
+                              <Box sx={{ pl: 2, backgroundColor: '#eeeeee' }}>
+                                {category.submenu.map((subitem, subIndex) => (
+                                  <ListItem 
+                                    key={subIndex}
+                                    component="a" 
+                                    href={subitem.href}
+                                    onClick={closeMobileMenu}
+                                    sx={{ py: 0.5, pl: 4 }}
+                                  >
+                                    <ListItemText 
+                                      primary={subitem.label}
+                                      sx={{ 
+                                        '& .MuiTypography-root': { 
+                                          fontSize: '0.8rem',
+                                          color: theme.palette.text.disabled
+                                        }
+                                      }}
+                                    />
+                                  </ListItem>
+                                ))}
+                              </Box>
+                            </Collapse>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Collapse>
                 )}
               </React.Fragment>
             ))}
