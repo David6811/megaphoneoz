@@ -197,10 +197,17 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
               width: isMobile ? '100%' : 'auto',
               justifyContent: isMobile ? 'space-between' : 'flex-start'
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="h1" sx={{ fontSize: '3rem', color: theme.palette.primary.main }}>
-                  📢
-                </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box
+                  component="img"
+                  src="/cropped-Megaphone-OZ-Logo-02-2.jpg"
+                  alt="MegaphoneOZ Logo"
+                  sx={{
+                    height: isMobile ? '60px' : '80px',
+                    width: 'auto',
+                    objectFit: 'contain'
+                  }}
+                />
                 <Typography 
                   variant="h1" 
                   component="h1" 
