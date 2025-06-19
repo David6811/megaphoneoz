@@ -177,17 +177,19 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
 
   return (
     <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50 }} className={className}>
-      <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
-        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary, height: 180 }}>
-          <Toolbar sx={{ 
-            justifyContent: 'space-between', 
-            py: 4, 
-            px: 2.5,
-            height: 180,
-            alignItems: 'center',
-            flexDirection: 'row',
-            gap: 0
-          }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
+        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary, height: 180, width: '100%' }}>
+          <Container maxWidth="xl" sx={{ height: '100%', display: 'flex', p: 0 }}>
+            <Toolbar sx={{ 
+              justifyContent: 'space-between', 
+              py: 4, 
+              px: 2.5,
+              height: 180,
+              alignItems: 'center',
+              flexDirection: 'row',
+              gap: 0,
+              width: '100%'
+            }}>
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -227,20 +229,20 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                 </IconButton>
               )}
             </Box>
-          </Toolbar>
+            </Toolbar>
+          </Container>
         </AppBar>
         
         {!isMobile && (
           <Box 
             component="nav" 
             sx={{ 
-              width: '100vw',
+              width: '100%',
               backgroundColor: theme.palette.primary.main,
-              position: 'relative',
-              marginLeft: 'calc(-50vw + 50%)',
               height: '60px'
             }}
           >
+          <Container maxWidth="xl" sx={{ height: '100%', display: 'flex', p: 0 }}>
           <Box 
             component="ul" 
             sx={{ 
@@ -360,6 +362,7 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
               </Box>
             ))}
           </Box>
+          </Container>
         </Box>
         )}
 
@@ -552,7 +555,7 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
           </List>
         </Drawer>
 
-      </Container>
+      </Box>
     </Box>
   );
 };
