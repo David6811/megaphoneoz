@@ -5,19 +5,33 @@ module.exports = {
   ],
   theme: {
     extend: {
-      colors: {
-        'brand-red': '#c60800',
-        'brand-red-dark': '#a00600',
-        'brand-gray': '#333333',
-        'brand-gray-light': '#666666',
+      // Only extend utilities that Material doesn't provide
+      backdropBlur: {
+        xs: '2px',
       },
-      fontFamily: {
-        'roboto': ['Roboto', 'sans-serif'],
+      aspectRatio: {
+        'video': '16 / 9',
+        'square': '1 / 1',
       },
-      height: {
-        '15': '60px',
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-in-out',
+        'slide-up': 'slideUp 0.3s ease-out',
       },
     },
   },
   plugins: [],
+  // Disable core plugins that conflict with Material-UI
+  corePlugins: {
+    // Keep these utilities that Material doesn't provide
+    aspectRatio: true,
+    backdropBlur: true,
+    animation: true,
+    // Disable spacing/colors - use Material theme instead
+    padding: false,
+    margin: false,
+    backgroundColor: false,
+    textColor: false,
+    fontSize: false,
+    fontFamily: false,
+  },
 }

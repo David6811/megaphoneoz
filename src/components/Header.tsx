@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { AppBar, Toolbar, Typography, IconButton, useTheme, Box, Container } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { HeaderProps, NavigationItem } from '../types';
 
 const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const theme = useTheme();
 
   const navigationItems: NavigationItem[] = [
     { label: 'Home', href: '/' },
@@ -19,53 +22,99 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const menuStyle: React.CSSProperties = {
-    marginLeft: 'calc(-50vw + 50%)',
-    height: '60px'
-  };
-
-  const linkStyle: React.CSSProperties = {
-    height: '60px'
-  };
-
   return (
-    <header className={`bg-white sticky top-0 z-50 ${className}`}>
-      <div className="max-w-6xl mx-auto flex flex-col p-0">
-        <div className="flex items-center justify-between py-5 px-5 bg-white">
-          <div className="flex items-center gap-2">
-            <div className="text-4xl text-brand-red">📢</div>
-            <h1 className="font-roboto font-black text-3xl tracking-wider m-0">
-              <span className="text-brand-gray">MEGAPHONE</span>
-              <span className="text-brand-red">OZ</span>
-            </h1>
-          </div>
-          <button 
-            className="hidden md:hidden lg:hidden text-2xl text-brand-red cursor-pointer p-1 md:block"
-            onClick={handleMenuToggle}
-            aria-label="Toggle menu"
-            type="button"
-          >
-            ☰
-          </button>
-        </div>
+    <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50 }} className={className}>
+      <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
+        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary }}>
+          <Toolbar sx={{ justifyContent: 'space-between', py: 2.5, px: 2.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h1" sx={{ fontSize: '2rem', color: theme.palette.primary.main }}>
+                📢
+              </Typography>
+              <Typography 
+                variant="h1" 
+                component="h1" 
+                sx={{ 
+                  fontWeight: 900, 
+                  fontSize: '1.875rem', 
+                  letterSpacing: '0.1em', 
+                  margin: 0,
+                  fontFamily: '"Roboto", sans-serif'
+                }}
+              >
+                <span style={{ color: theme.palette.secondary.main }}>MEGAPHONE</span>
+                <span style={{ color: theme.palette.primary.main }}>OZ</span>
+              </Typography>
+            </Box>
+            <IconButton
+              onClick={handleMenuToggle}
+              aria-label="Toggle menu"
+              sx={{ 
+                color: theme.palette.primary.main,
+                display: { xs: 'none', md: 'flex' }
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Toolbar>
+        </AppBar>
         
-        <nav className="w-screen bg-brand-red relative" style={menuStyle}>
-          <ul className="list-none m-0 p-0 flex items-center justify-center gap-0 bg-brand-red w-full" style={linkStyle}>
+        <Box 
+          component="nav" 
+          sx={{ 
+            width: '100vw',
+            backgroundColor: theme.palette.primary.main,
+            position: 'relative',
+            marginLeft: 'calc(-50vw + 50%)',
+            height: '60px'
+          }}
+        >
+          <Box 
+            component="ul" 
+            sx={{ 
+              listStyle: 'none',
+              margin: 0,
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0,
+              backgroundColor: theme.palette.primary.main,
+              width: '100%',
+              height: '60px'
+            }}
+          >
             {navigationItems.map((item, index) => (
-              <li key={index} className="relative">
-                <a 
+              <Box component="li" key={index} sx={{ position: 'relative' }}>
+                <Box 
+                  component="a"
                   href={item.href} 
-                  className="flex items-center px-6 text-white font-roboto font-semibold text-sm tracking-wide capitalize transition-all duration-300 whitespace-nowrap hover:bg-white hover:bg-opacity-10" 
-                  style={linkStyle}
+                  sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    px: 3,
+                    color: 'white',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.05em',
+                    textTransform: 'capitalize',
+                    textDecoration: 'none',
+                    whiteSpace: 'nowrap',
+                    height: '60px',
+                    transition: 'background-color 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }}
                 >
                   {item.label}
-                </a>
-              </li>
+                </Box>
+              </Box>
             ))}
-          </ul>
-        </nav>
-      </div>
-    </header>
+          </Box>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 
