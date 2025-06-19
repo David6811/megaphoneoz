@@ -10,6 +10,7 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const [newsAnchorEl, setNewsAnchorEl] = useState<null | HTMLElement>(null);
   const [lifestyleAnchorEl, setLifestyleAnchorEl] = useState<null | HTMLElement>(null);
   const [artsAnchorEl, setArtsAnchorEl] = useState<null | HTMLElement>(null);
+  const [hoveredSubmenu, setHoveredSubmenu] = useState<string | null>(null);
   const theme = useTheme();
 
   const navigationItems: NavigationItem[] = [
@@ -83,21 +84,21 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     setArtsAnchorEl(null);
   };
 
-  const renderHorizontalMenu = (categories: NavigationDropdownItem[]) => {
+  const renderVerticalMenu = (categories: NavigationDropdownItem[]) => {
     return (
       <Box sx={{ 
-        display: 'flex',
-        minHeight: '250px',
         backgroundColor: theme.palette.primary.main,
         color: 'white',
+        position: 'relative'
       }}>
-        {/* Left column - main categories */}
-        <Box sx={{ 
-          flex: 1,
-          borderRight: '1px solid rgba(255, 255, 255, 0.1)'
-        }}>
-          {categories.map((category, index) => (
-            <Box key={index} sx={{ 
+        {categories.map((category, index) => (
+          <Box 
+            key={index} 
+            sx={{ position: 'relative' }}
+            onMouseEnter={() => setHoveredSubmenu(category.hasSubmenu ? category.label : null)}
+            onMouseLeave={() => setHoveredSubmenu(null)}
+          >
+            <Box sx={{ 
               display: 'flex',
               alignItems: 'center',
               px: 3,
@@ -121,45 +122,38 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                 <ChevronRightIcon sx={{ fontSize: '1rem', ml: 1 }} />
               )}
             </Box>
-          ))}
-        </Box>
-        
-        {/* Right column - submenus */}
-        <Box sx={{ 
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          p: 3
-        }}>
-          {categories.find(cat => cat.hasSubmenu)?.submenu && (
-            <>
-              <Typography variant="h6" sx={{ 
-                color: 'white',
-                fontSize: '1rem',
-                fontWeight: 600,
-                mb: 2
+            
+            {/* Secondary submenu appears to the right */}
+            {category.hasSubmenu && hoveredSubmenu === category.label && category.submenu && (
+              <Box sx={{
+                position: 'absolute',
+                left: '100%',
+                top: 0,
+                backgroundColor: theme.palette.primary.main,
+                minWidth: 200,
+                boxShadow: '2px 0 10px rgba(0,0,0,0.15)',
+                zIndex: 1001
               }}>
-                {categories.find(cat => cat.hasSubmenu)?.label}
-              </Typography>
-              {categories.find(cat => cat.hasSubmenu)?.submenu?.map((subitem, subIndex) => (
-                <Box key={subIndex} component="a" href={subitem.href} sx={{
-                  color: 'white',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  py: 1,
-                  px: 2,
-                  borderRadius: 1,
-                  mb: 0.5,
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                  }
-                }}>
-                  {subitem.label}
-                </Box>
-              ))}
-            </>
-          )}
-        </Box>
+                {category.submenu.map((subitem, subIndex) => (
+                  <Box key={subIndex} component="a" href={subitem.href} sx={{
+                    display: 'block',
+                    color: 'white',
+                    textDecoration: 'none',
+                    fontSize: '0.875rem',
+                    py: 1.5,
+                    px: 3,
+                    borderBottom: subIndex < category.submenu!.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }}>
+                    {subitem.label}
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        ))}
       </Box>
     );
   };
@@ -257,82 +251,81 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                     <ExpandMoreIcon sx={{ ml: 0.5, fontSize: '1rem' }} />
                   )}
                 </Box>
+                
+                {/* Individual dropdown positioned under each menu item */}
+                {item.label === 'News' && Boolean(newsAnchorEl) && (
+                  <Box sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    zIndex: 1000,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    minWidth: 200
+                  }}
+                  onMouseEnter={() => setNewsAnchorEl(newsAnchorEl)}
+                  onMouseLeave={handleNewsLeave}
+                  >
+                    <Box sx={{ 
+                      backgroundColor: theme.palette.primary.main,
+                      color: 'white',
+                    }}>
+                      {newsCategories.map((category, catIndex) => (
+                        <Box key={catIndex} component="a" href={category.href} sx={{
+                          display: 'block',
+                          color: 'white',
+                          textDecoration: 'none',
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          px: 3,
+                          py: 2,
+                          borderBottom: catIndex < newsCategories.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                          }
+                        }}>
+                          {category.label}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {item.label === 'Lifestyle' && Boolean(lifestyleAnchorEl) && (
+                  <Box sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    zIndex: 1000,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    minWidth: 200
+                  }}
+                  onMouseEnter={() => setLifestyleAnchorEl(lifestyleAnchorEl)}
+                  onMouseLeave={handleLifestyleLeave}
+                  >
+                    {renderVerticalMenu(lifestyleCategories)}
+                  </Box>
+                )}
+
+                {item.label === 'Arts and Entertainment' && Boolean(artsAnchorEl) && (
+                  <Box sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    zIndex: 1000,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    minWidth: 200
+                  }}
+                  onMouseEnter={() => setArtsAnchorEl(artsAnchorEl)}
+                  onMouseLeave={handleArtsLeave}
+                  >
+                    {renderVerticalMenu(artsCategories)}
+                  </Box>
+                )}
               </Box>
             ))}
           </Box>
         </Box>
 
-        {/* News Dropdown Menu */}
-        {Boolean(newsAnchorEl) && (
-          <Box sx={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 1000,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-          }}
-          onMouseEnter={() => setNewsAnchorEl(newsAnchorEl)}
-          onMouseLeave={handleNewsLeave}
-          >
-            <Box sx={{ 
-              display: 'flex',
-              backgroundColor: theme.palette.primary.main,
-              color: 'white',
-            }}>
-              {newsCategories.map((category, index) => (
-                <Box key={index} component="a" href={category.href} sx={{
-                  color: 'white',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  px: 3,
-                  py: 2,
-                  borderRight: index < newsCategories.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                  }
-                }}>
-                  {category.label}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        )}
-
-        {/* Lifestyle Dropdown Menu */}
-        {Boolean(lifestyleAnchorEl) && (
-          <Box sx={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 1000,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-          }}
-          onMouseEnter={() => setLifestyleAnchorEl(lifestyleAnchorEl)}
-          onMouseLeave={handleLifestyleLeave}
-          >
-            {renderHorizontalMenu(lifestyleCategories)}
-          </Box>
-        )}
-
-        {/* Arts and Entertainment Dropdown Menu */}
-        {Boolean(artsAnchorEl) && (
-          <Box sx={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 1000,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-          }}
-          onMouseEnter={() => setArtsAnchorEl(artsAnchorEl)}
-          onMouseLeave={handleArtsLeave}
-          >
-            {renderHorizontalMenu(artsCategories)}
-          </Box>
-        )}
       </Container>
     </Box>
   );
