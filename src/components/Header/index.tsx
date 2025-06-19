@@ -7,7 +7,6 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { HeaderProps, NavigationItem, NavigationDropdownItem } from '../../types';
 
 const Header: React.FC<HeaderProps> = ({ className = '' }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [newsAnchorEl, setNewsAnchorEl] = useState<null | HTMLElement>(null);
   const [lifestyleAnchorEl, setLifestyleAnchorEl] = useState<null | HTMLElement>(null);
   const [artsAnchorEl, setArtsAnchorEl] = useState<null | HTMLElement>(null);
@@ -169,15 +168,15 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   return (
     <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50 }} className={className}>
       <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
-        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary, minHeight: isMobile ? 180 : 'auto' }}>
+        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary, height: 180 }}>
           <Toolbar sx={{ 
             justifyContent: 'space-between', 
-            py: isMobile ? 3 : 2.5, 
+            py: 4, 
             px: 2.5,
-            minHeight: isMobile ? 180 : 'auto',
-            alignItems: isMobile ? 'flex-start' : 'center',
-            flexDirection: isMobile ? 'column' : 'row',
-            gap: isMobile ? 2 : 0
+            height: 180,
+            alignItems: 'center',
+            flexDirection: 'row',
+            gap: 0
           }}>
             <Box sx={{ 
               display: 'flex', 
@@ -187,7 +186,7 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
               justifyContent: isMobile ? 'space-between' : 'flex-start'
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="h1" sx={{ fontSize: isMobile ? '1.5rem' : '2rem', color: theme.palette.primary.main }}>
+                <Typography variant="h1" sx={{ fontSize: '3rem', color: theme.palette.primary.main }}>
                   📢
                 </Typography>
                 <Typography 
@@ -195,7 +194,7 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                   component="h1" 
                   sx={{ 
                     fontWeight: 900, 
-                    fontSize: isMobile ? '1.5rem' : '1.875rem', 
+                    fontSize: '2.5rem', 
                     letterSpacing: '0.1em', 
                     margin: 0,
                     fontFamily: '"Roboto", sans-serif'
