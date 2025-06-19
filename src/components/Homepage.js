@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import FeaturedSlider from './FeaturedSlider';
 import './Homepage.css';
 
 const Homepage = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
 
   const featuredArticles = [
     {
@@ -116,34 +116,10 @@ const Homepage = () => {
     "Arctic sea ice melts"
   ];
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % featuredArticles.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <div className="homepage">
-      {/* Featured Slider */}
-      <section className="featured-slider">
-        <div className="slider-container">
-          <div className="slide active">
-            <img src={featuredArticles[0].image} alt={featuredArticles[0].title} />
-            <div className="slide-overlay">
-              <div className="slide-content">
-                <div className="slide-date">{featuredArticles[0].date}</div>
-                <div className="slide-category">{featuredArticles[0].category}</div>
-                <h2 className="slide-title">{featuredArticles[0].title}</h2>
-              </div>
-            </div>
-          </div>
-          <div className="slider-nav">
-            <button className="nav-btn prev">❮</button>
-            <button className="nav-btn next">❯</button>
-          </div>
-        </div>
-      </section>
+      <FeaturedSlider slides={featuredArticles} />
 
       <div className="main-layout">
         <div className="content-columns">

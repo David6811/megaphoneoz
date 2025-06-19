@@ -8,14 +8,13 @@ const Header = () => {
     <header className="site-header">
       <div className="header-container">
         <div className="logo-section">
-          <div className="logo-icon">🦜</div>
-          <h1 className="site-logo">
-            <span className="logo-text">MEGAPHONE</span>
-            <span className="logo-accent">OZ</span>
-          </h1>
-        </div>
-        
-        <nav className="main-navigation">
+          <div className="logo-area">
+            <div className="logo-icon">📢</div>
+            <h1 className="site-logo">
+              <span className="logo-text">MEGAPHONE</span>
+              <span className="logo-accent">OZ</span>
+            </h1>
+          </div>
           <button 
             className="menu-toggle"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -23,6 +22,9 @@ const Header = () => {
           >
             ☰
           </button>
+        </div>
+        
+        <nav className="main-navigation">
           
           <ul className={`nav-menu ${isMenuOpen ? 'nav-menu-open' : ''}`}>
             <li className="nav-item">

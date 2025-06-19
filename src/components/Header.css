@@ -4,27 +4,34 @@
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: none;
+  border-bottom: none;
 }
 
 .header-container {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
+  flex-direction: column;
+  padding: 0;
 }
 
 .logo-section {
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px;
+  background: #ffffff;
+}
+
+.logo-area {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .logo-icon {
-  font-size: 32px;
+  font-size: 36px;
   color: #c60800;
 }
 
@@ -32,22 +39,23 @@
   margin: 0;
   font-family: 'Roboto', sans-serif;
   font-weight: 900;
-  font-size: 28px;
-  letter-spacing: 1px;
+  font-size: 32px;
+  letter-spacing: 1.2px;
 }
 
 .logo-text {
-  color: #c60800;
-}
-
-.logo-accent {
   color: #333333;
 }
 
+.logo-accent {
+  color: #c60800;
+}
+
 .main-navigation {
-  position: relative;
+  width: 100vw;
   background: #c60800;
   border-radius: 0;
+  margin-left: calc(-50vw + 50%);
 }
 
 .menu-toggle {
@@ -66,8 +74,10 @@
   padding: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0;
   background: #c60800;
+  width: 100%;
 }
 
 .nav-item {
@@ -76,15 +86,16 @@
 
 .nav-link {
   display: block;
-  padding: 12px 20px;
+  padding: 15px 25px;
   text-decoration: none;
   color: #ffffff;
   font-family: 'Roboto', sans-serif;
-  font-weight: 500;
-  font-size: 13px;
+  font-weight: 600;
+  font-size: 14px;
   letter-spacing: 0.5px;
   text-transform: capitalize;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -146,8 +157,9 @@
 
 /* Mobile Styles */
 @media (max-width: 768px) {
-  .header-container {
+  .logo-section {
     padding: 10px 15px;
+    justify-content: space-between;
   }
   
   .site-logo {
@@ -158,13 +170,15 @@
     display: block;
   }
   
+  .main-navigation {
+    position: relative;
+  }
+  
   .nav-menu {
     position: absolute;
-    top: 100%;
-    right: 0;
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-top: 2px solid #c60800;
+    top: 0;
+    right: 15px;
+    background: #c60800;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     flex-direction: column;
     align-items: stretch;
@@ -173,6 +187,8 @@
     visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.3s ease;
+    padding: 0;
+    z-index: 1000;
   }
   
   .nav-menu-open {
@@ -192,6 +208,11 @@
   
   .nav-link {
     padding: 15px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    color: #ffffff;
+  }
+  
+  .nav-item:last-child .nav-link {
     border-bottom: none;
   }
   
