@@ -10,8 +10,22 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       id: 1,
       title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
       date: "June 1, 2025",
-      image: "/api/placeholder/600/400",
+      image: "https://picsum.photos/800/400?random=1",
       category: "REVIEW"
+    },
+    {
+      id: 2,
+      title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH",
+      date: "May 26, 2025",
+      image: "https://picsum.photos/800/400?random=2", 
+      category: "NEWS"
+    },
+    {
+      id: 3,
+      title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES",
+      date: "October 15, 2024",
+      image: "https://picsum.photos/800/400?random=3",
+      category: "NEWS"
     }
   ];
 
@@ -21,7 +35,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION",
       date: "May 26, 2025",
       comments: 0,
-      image: "/api/placeholder/400/250",
+      image: "https://picsum.photos/400/250?random=4",
       excerpt: "Labor's unexpected huge win on May 3 has exploded the federal coalition creating a fracture between the National and Liberal..."
     },
     {
@@ -29,21 +43,21 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES WITH ISRAEL",
       date: "October 15, 2024",
       comments: 0,
-      image: "/api/placeholder/400/250"
+      image: "https://picsum.photos/400/250?random=5"
     },
     {
       id: 3,
       title: "TAIWAN'S INDIGENOUS WONDER WOMAN RUNS IN ELECTION",
       date: "January 12, 2024",
       comments: 0,
-      image: "/api/placeholder/400/250"
+      image: "https://picsum.photos/400/250?random=6"
     },
     {
       id: 4,
       title: "LE CYGNE: HAYDN SKINNER AND HIS BELOVED CELLO",
       date: "July 12, 2024",
       comments: 0,
-      image: "/api/placeholder/400/250"
+      image: "https://picsum.photos/400/250?random=7"
     }
   ];
 
@@ -53,7 +67,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
       date: "June 15, 2025",
       comments: 0,
-      image: "/api/placeholder/400/250",
+      image: "https://picsum.photos/400/250?random=4",
       excerpt: "It's hard to imagine Skank Sinatra (the alter persona of Jens Radda) as anything other than a glamorous, over-the-top cabaret queen..."
     },
     {
@@ -61,7 +75,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
       date: "June 15, 2025",
       comments: 1,
-      image: "/api/placeholder/400/250",
+      image: "https://picsum.photos/400/250?random=4",
       excerpt: "Game lovers, cosplayers and visitors joined Sydney University Anime Society for a Wuthering Waves game-themed event celebrating its first anniversary at..."
     },
     {
@@ -69,7 +83,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
       date: "June 13, 2025",
       comments: 0,
-      image: "/api/placeholder/400/250",
+      image: "https://picsum.photos/400/250?random=4",
       excerpt: "Check into another world when you book yourself into L'Hotel. It's a head-spinning mix of burlesque, cabaret and circus expertise with..."
     },
     {
@@ -77,7 +91,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
       date: "June 1, 2025",
       comments: 0,
-      image: "/api/placeholder/400/250",
+      image: "https://picsum.photos/400/250?random=4",
       excerpt: "'This is Our Happy Place' declares the sign on the classroom where the school's Executive Committee (all parent volunteers, of..."
     }
   ];
@@ -196,7 +210,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               <h3 className="sidebar-title">JAYA BALENDRA: EXPOSED LUNA PARK GHOST TRAIN FIRE</h3>
               <div className="video-player">
                 <div className="video-thumbnail">
-                  <img src="/api/placeholder/300/200" alt="Video thumbnail" />
+                  <img src="https://picsum.photos/300/200?random=10" alt="Video thumbnail" />
                   <div className="play-button">▶</div>
                 </div>
               </div>

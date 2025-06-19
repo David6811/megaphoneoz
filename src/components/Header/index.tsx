@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, useTheme, Box, Container } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, useTheme, Box, Container, Drawer, List, ListItem, ListItemText, useMediaQuery } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { HeaderProps, NavigationItem, NavigationDropdownItem } from '../../types';
@@ -11,7 +12,9 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const [lifestyleAnchorEl, setLifestyleAnchorEl] = useState<null | HTMLElement>(null);
   const [artsAnchorEl, setArtsAnchorEl] = useState<null | HTMLElement>(null);
   const [hoveredSubmenu, setHoveredSubmenu] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const navigationItems: NavigationItem[] = [
     { label: 'Home', href: '/' },
@@ -56,9 +59,6 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     { label: 'Drawn and Quartered', href: '/arts/drawn-and-quartered' },
   ];
 
-  const handleMenuToggle = (): void => {
-    setIsMenuOpen(!isMenuOpen);
-  };
 
   const handleNewsEnter = (event: React.MouseEvent<HTMLElement>) => {
     setNewsAnchorEl(event.currentTarget);
@@ -82,6 +82,14 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
 
   const handleArtsLeave = () => {
     setArtsAnchorEl(null);
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   const renderVerticalMenu = (categories: NavigationDropdownItem[]) => {
@@ -161,50 +169,69 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   return (
     <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50 }} className={className}>
       <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
-        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary }}>
-          <Toolbar sx={{ justifyContent: 'space-between', py: 2.5, px: 2.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="h1" sx={{ fontSize: '2rem', color: theme.palette.primary.main }}>
-                📢
-              </Typography>
-              <Typography 
-                variant="h1" 
-                component="h1" 
-                sx={{ 
-                  fontWeight: 900, 
-                  fontSize: '1.875rem', 
-                  letterSpacing: '0.1em', 
-                  margin: 0,
-                  fontFamily: '"Roboto", sans-serif'
-                }}
-              >
-                <span style={{ color: theme.palette.secondary.main }}>MEGAPHONE</span>
-                <span style={{ color: theme.palette.primary.main }}>OZ</span>
-              </Typography>
+        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary, minHeight: isMobile ? 180 : 'auto' }}>
+          <Toolbar sx={{ 
+            justifyContent: 'space-between', 
+            py: isMobile ? 3 : 2.5, 
+            px: 2.5,
+            minHeight: isMobile ? 180 : 'auto',
+            alignItems: isMobile ? 'flex-start' : 'center',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 2 : 0
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              width: isMobile ? '100%' : 'auto',
+              justifyContent: isMobile ? 'space-between' : 'flex-start'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h1" sx={{ fontSize: isMobile ? '1.5rem' : '2rem', color: theme.palette.primary.main }}>
+                  📢
+                </Typography>
+                <Typography 
+                  variant="h1" 
+                  component="h1" 
+                  sx={{ 
+                    fontWeight: 900, 
+                    fontSize: isMobile ? '1.5rem' : '1.875rem', 
+                    letterSpacing: '0.1em', 
+                    margin: 0,
+                    fontFamily: '"Roboto", sans-serif'
+                  }}
+                >
+                  <span style={{ color: theme.palette.secondary.main }}>MEGAPHONE</span>
+                  <span style={{ color: theme.palette.primary.main }}>OZ</span>
+                </Typography>
+              </Box>
+              {isMobile && (
+                <IconButton
+                  onClick={toggleMobileMenu}
+                  aria-label="Toggle menu"
+                  sx={{ 
+                    color: theme.palette.primary.main,
+                    fontSize: '2rem'
+                  }}
+                >
+                  <MenuIcon />
+                </IconButton>
+              )}
             </Box>
-            <IconButton
-              onClick={handleMenuToggle}
-              aria-label="Toggle menu"
-              sx={{ 
-                color: theme.palette.primary.main,
-                display: { xs: 'none', md: 'flex' }
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
           </Toolbar>
         </AppBar>
         
-        <Box 
-          component="nav" 
-          sx={{ 
-            width: '100vw',
-            backgroundColor: theme.palette.primary.main,
-            position: 'relative',
-            marginLeft: 'calc(-50vw + 50%)',
-            height: '60px'
-          }}
-        >
+        {!isMobile && (
+          <Box 
+            component="nav" 
+            sx={{ 
+              width: '100vw',
+              backgroundColor: theme.palette.primary.main,
+              position: 'relative',
+              marginLeft: 'calc(-50vw + 50%)',
+              height: '60px'
+            }}
+          >
           <Box 
             component="ul" 
             sx={{ 
@@ -325,6 +352,179 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             ))}
           </Box>
         </Box>
+        )}
+
+        {/* Mobile Drawer Menu */}
+        <Drawer
+          anchor="left"
+          open={mobileMenuOpen}
+          onClose={closeMobileMenu}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: 280,
+              backgroundColor: 'white',
+              pt: 2
+            }
+          }}
+        >
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            px: 2, 
+            pb: 2,
+            borderBottom: '1px solid #eee'
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}>
+              Menu
+            </Typography>
+            <IconButton onClick={closeMobileMenu}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <List>
+            {navigationItems.map((item, index) => (
+              <React.Fragment key={index}>
+                <ListItem 
+                  component={item.hasDropdown ? "div" : "a"}
+                  href={!item.hasDropdown ? item.href : undefined}
+                  sx={{ 
+                    cursor: 'pointer',
+                    '&:hover': { backgroundColor: 'rgba(198, 8, 0, 0.05)' }
+                  }}
+                >
+                  <ListItemText 
+                    primary={item.label}
+                    sx={{ 
+                      '& .MuiTypography-root': { 
+                        fontWeight: 600,
+                        color: theme.palette.text.primary
+                      }
+                    }}
+                  />
+                  {item.hasDropdown && (
+                    <ExpandMoreIcon sx={{ color: theme.palette.primary.main }} />
+                  )}
+                </ListItem>
+                
+                {/* Mobile Submenus */}
+                {item.hasDropdown && (
+                  <Box sx={{ pl: 2, backgroundColor: '#f5f5f5' }}>
+                    {item.label === 'News' && newsCategories.map((category, catIndex) => (
+                      <ListItem 
+                        key={catIndex}
+                        component="a" 
+                        href={category.href}
+                        onClick={closeMobileMenu}
+                        sx={{ py: 1 }}
+                      >
+                        <ListItemText 
+                          primary={category.label}
+                          sx={{ 
+                            '& .MuiTypography-root': { 
+                              fontSize: '0.9rem',
+                              color: theme.palette.text.secondary
+                            }
+                          }}
+                        />
+                      </ListItem>
+                    ))}
+                    
+                    {item.label === 'Lifestyle' && lifestyleCategories.map((category, catIndex) => (
+                      <Box key={catIndex}>
+                        <ListItem 
+                          component="a" 
+                          href={category.href}
+                          onClick={closeMobileMenu}
+                          sx={{ py: 1 }}
+                        >
+                          <ListItemText 
+                            primary={category.label}
+                            sx={{ 
+                              '& .MuiTypography-root': { 
+                                fontSize: '0.9rem',
+                                color: theme.palette.text.secondary
+                              }
+                            }}
+                          />
+                          {category.hasSubmenu && <ChevronRightIcon sx={{ fontSize: '1rem' }} />}
+                        </ListItem>
+                        {category.hasSubmenu && category.submenu && (
+                          <Box sx={{ pl: 2 }}>
+                            {category.submenu.map((subitem, subIndex) => (
+                              <ListItem 
+                                key={subIndex}
+                                component="a" 
+                                href={subitem.href}
+                                onClick={closeMobileMenu}
+                                sx={{ py: 0.5, pl: 4 }}
+                              >
+                                <ListItemText 
+                                  primary={subitem.label}
+                                  sx={{ 
+                                    '& .MuiTypography-root': { 
+                                      fontSize: '0.8rem',
+                                      color: theme.palette.text.disabled
+                                    }
+                                  }}
+                                />
+                              </ListItem>
+                            ))}
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
+                    
+                    {item.label === 'Arts and Entertainment' && artsCategories.map((category, catIndex) => (
+                      <Box key={catIndex}>
+                        <ListItem 
+                          component="a" 
+                          href={category.href}
+                          onClick={closeMobileMenu}
+                          sx={{ py: 1 }}
+                        >
+                          <ListItemText 
+                            primary={category.label}
+                            sx={{ 
+                              '& .MuiTypography-root': { 
+                                fontSize: '0.9rem',
+                                color: theme.palette.text.secondary
+                              }
+                            }}
+                          />
+                          {category.hasSubmenu && <ChevronRightIcon sx={{ fontSize: '1rem' }} />}
+                        </ListItem>
+                        {category.hasSubmenu && category.submenu && (
+                          <Box sx={{ pl: 2 }}>
+                            {category.submenu.map((subitem, subIndex) => (
+                              <ListItem 
+                                key={subIndex}
+                                component="a" 
+                                href={subitem.href}
+                                onClick={closeMobileMenu}
+                                sx={{ py: 0.5, pl: 4 }}
+                              >
+                                <ListItemText 
+                                  primary={subitem.label}
+                                  sx={{ 
+                                    '& .MuiTypography-root': { 
+                                      fontSize: '0.8rem',
+                                      color: theme.palette.text.disabled
+                                    }
+                                  }}
+                                />
+                              </ListItem>
+                            ))}
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </React.Fragment>
+            ))}
+          </List>
+        </Drawer>
 
       </Container>
     </Box>
