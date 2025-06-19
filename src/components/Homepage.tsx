@@ -1,10 +1,11 @@
 import React from 'react';
 import FeaturedSlider from './FeaturedSlider';
+import { HomepageProps, SlideData, Article, Comment } from '../types';
 import './Homepage.css';
 
-const Homepage = () => {
-
-  const featuredArticles = [
+const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
+  
+  const featuredArticles: SlideData[] = [
     {
       id: 1,
       title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
@@ -14,7 +15,7 @@ const Homepage = () => {
     }
   ];
 
-  const newsArticles = [
+  const newsArticles: Article[] = [
     {
       id: 1,
       title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION",
@@ -46,7 +47,7 @@ const Homepage = () => {
     }
   ];
 
-  const artsArticles = [
+  const artsArticles: Article[] = [
     {
       id: 1,
       title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
@@ -81,7 +82,7 @@ const Homepage = () => {
     }
   ];
 
-  const recentArticles = [
+  const recentArticles: string[] = [
     "REVIEW: HAIRSPRAY",
     "BACH ETERNAL PLAYS ON",
     "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
@@ -91,7 +92,7 @@ const Homepage = () => {
     "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION"
   ];
 
-  const recentComments = [
+  const recentComments: Comment[] = [
     { author: "Zen", post: "SUAnime Brings Wuthering Waves Celebration to USYD Campus" },
     { author: "Навруува акот", post: "Food Review: Khanom House Delivers Subtle Sweet Indulgence" },
     { author: "Catherine", post: "Food Review: Khanom House Delivers Subtle Sweet Indulgence" },
@@ -99,7 +100,7 @@ const Homepage = () => {
     { author: "bob", post: "REVIEW: GASLIGHT AT ROSLYN PACKER THEATRE, SYDNEY" }
   ];
 
-  const bestOfRest = [
+  const bestOfRest: string[] = [
     "Why the press is losing",
     "The Cambridge Analytica Files",
     "Lies spread faster than truth",
@@ -116,9 +117,8 @@ const Homepage = () => {
     "Arctic sea ice melts"
   ];
 
-
   return (
-    <div className="homepage">
+    <div className={`homepage ${className}`}>
       <FeaturedSlider slides={featuredArticles} />
 
       <div className="main-layout">
@@ -129,7 +129,7 @@ const Homepage = () => {
             <section className="news-section">
               <h2 className="section-title">NEWS</h2>
               <div className="articles-grid">
-                {newsArticles.map((article, index) => (
+                {newsArticles.map((article: Article, index: number) => (
                   <article key={article.id} className={`article-item ${index === 0 ? 'featured-article' : ''}`}>
                     <div className="article-image">
                       <img src={article.image} alt={article.title} />
@@ -151,7 +151,7 @@ const Homepage = () => {
             <section className="arts-section">
               <h2 className="section-title">ARTS AND ENTERTAINMENT</h2>
               <div className="articles-grid">
-                {artsArticles.map((article) => (
+                {artsArticles.map((article: Article) => (
                   <article key={article.id} className="article-item">
                     <div className="article-image">
                       <img src={article.image} alt={article.title} />
@@ -206,7 +206,7 @@ const Homepage = () => {
             <div className="sidebar-section">
               <h3 className="sidebar-title">RECENT ARTICLES</h3>
               <ul className="recent-list">
-                {recentArticles.map((article, index) => (
+                {recentArticles.map((article: string, index: number) => (
                   <li key={index}><a href="#">{article}</a></li>
                 ))}
               </ul>
@@ -216,7 +216,7 @@ const Homepage = () => {
             <div className="sidebar-section">
               <h3 className="sidebar-title">RECENT COMMENTS</h3>
               <ul className="recent-comments">
-                {recentComments.map((comment, index) => (
+                {recentComments.map((comment: Comment, index: number) => (
                   <li key={index}>
                     <strong>{comment.author}</strong> on <a href="#">{comment.post}</a>
                   </li>
@@ -228,7 +228,7 @@ const Homepage = () => {
             <div className="sidebar-section">
               <h3 className="sidebar-title">BEST OF THE REST</h3>
               <ul className="best-of-list">
-                {bestOfRest.map((item, index) => (
+                {bestOfRest.map((item: string, index: number) => (
                   <li key={index}>📰 <a href="#">{item}</a></li>
                 ))}
               </ul>
