@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, useTheme, Box, Container, Menu, MenuItem, Fade, Divider } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, useTheme, Box, Container } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -59,75 +59,109 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleNewsClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleNewsEnter = (event: React.MouseEvent<HTMLElement>) => {
     setNewsAnchorEl(event.currentTarget);
   };
 
-  const handleLifestyleClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleLifestyleEnter = (event: React.MouseEvent<HTMLElement>) => {
     setLifestyleAnchorEl(event.currentTarget);
   };
 
-  const handleArtsClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleArtsEnter = (event: React.MouseEvent<HTMLElement>) => {
     setArtsAnchorEl(event.currentTarget);
   };
 
-  const handleNewsClose = () => {
+  const handleNewsLeave = () => {
     setNewsAnchorEl(null);
   };
 
-  const handleLifestyleClose = () => {
+  const handleLifestyleLeave = () => {
     setLifestyleAnchorEl(null);
   };
 
-  const handleArtsClose = () => {
+  const handleArtsLeave = () => {
     setArtsAnchorEl(null);
   };
 
-  const renderMenuItems = (categories: NavigationDropdownItem[], onClose: () => void) => {
-    return categories.map((category, index) => (
-      <React.Fragment key={index}>
-        <MenuItem 
-          onClick={onClose}
-          component="a"
-          href={category.href}
-          sx={{ 
-            textDecoration: 'none',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <span>{category.label}</span>
-          {category.hasSubmenu && <ChevronRightIcon sx={{ fontSize: '1rem', ml: 1 }} />}
-        </MenuItem>
-        {category.hasSubmenu && category.submenu && (
-          <Box sx={{ pl: 2 }}>
-            {category.submenu.map((subitem, subIndex) => (
-              <MenuItem 
-                key={subIndex}
-                onClick={onClose}
-                component="a"
-                href={subitem.href}
-                sx={{ 
+  const renderHorizontalMenu = (categories: NavigationDropdownItem[]) => {
+    return (
+      <Box sx={{ 
+        display: 'flex',
+        minHeight: '250px',
+        backgroundColor: theme.palette.primary.main,
+        color: 'white',
+      }}>
+        {/* Left column - main categories */}
+        <Box sx={{ 
+          flex: 1,
+          borderRight: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
+          {categories.map((category, index) => (
+            <Box key={index} sx={{ 
+              display: 'flex',
+              alignItems: 'center',
+              px: 3,
+              py: 2,
+              cursor: 'pointer',
+              borderBottom: index < categories.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
+            }}>
+              <Box component="a" href={category.href} sx={{ 
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                flex: 1
+              }}>
+                {category.label}
+              </Box>
+              {category.hasSubmenu && (
+                <ChevronRightIcon sx={{ fontSize: '1rem', ml: 1 }} />
+              )}
+            </Box>
+          ))}
+        </Box>
+        
+        {/* Right column - submenus */}
+        <Box sx={{ 
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: 3
+        }}>
+          {categories.find(cat => cat.hasSubmenu)?.submenu && (
+            <>
+              <Typography variant="h6" sx={{ 
+                color: 'white',
+                fontSize: '1rem',
+                fontWeight: 600,
+                mb: 2
+              }}>
+                {categories.find(cat => cat.hasSubmenu)?.label}
+              </Typography>
+              {categories.find(cat => cat.hasSubmenu)?.submenu?.map((subitem, subIndex) => (
+                <Box key={subIndex} component="a" href={subitem.href} sx={{
+                  color: 'white',
                   textDecoration: 'none',
-                  fontSize: '0.8rem',
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontSize: '0.875rem',
+                  py: 1,
+                  px: 2,
+                  borderRadius: 1,
+                  mb: 0.5,
                   '&:hover': {
-                    color: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
                   }
-                }}
-              >
-                • {subitem.label}
-              </MenuItem>
-            ))}
-          </Box>
-        )}
-        {index < categories.length - 1 && category.hasSubmenu && (
-          <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', my: 0.5 }} />
-        )}
-      </React.Fragment>
-    ));
+                }}>
+                  {subitem.label}
+                </Box>
+              ))}
+            </>
+          )}
+        </Box>
+      </Box>
+    );
   };
 
   return (
@@ -195,9 +229,10 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             {navigationItems.map((item, index) => (
               <Box component="li" key={index} sx={{ position: 'relative' }}>
                 <Box 
-                  component={item.hasDropdown ? "button" : "a"}
+                  component={item.hasDropdown ? "div" : "a"}
                   href={!item.hasDropdown ? item.href : undefined}
-                  onClick={item.label === 'News' ? handleNewsClick : item.label === 'Lifestyle' ? handleLifestyleClick : item.label === 'Arts and Entertainment' ? handleArtsClick : undefined}
+                  onMouseEnter={item.label === 'News' ? handleNewsEnter : item.label === 'Lifestyle' ? handleLifestyleEnter : item.label === 'Arts and Entertainment' ? handleArtsEnter : undefined}
+                  onMouseLeave={item.label === 'News' ? handleNewsLeave : item.label === 'Lifestyle' ? handleLifestyleLeave : item.label === 'Arts and Entertainment' ? handleArtsLeave : undefined}
                   sx={{ 
                     display: 'flex',
                     alignItems: 'center',
@@ -211,8 +246,6 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                     whiteSpace: 'nowrap',
                     height: '60px',
                     transition: 'background-color 0.3s ease',
-                    border: item.hasDropdown ? 'none' : undefined,
-                    background: item.hasDropdown ? 'transparent' : undefined,
                     cursor: 'pointer',
                     '&:hover': {
                       backgroundColor: 'rgba(255, 255, 255, 0.1)'
@@ -230,101 +263,76 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         </Box>
 
         {/* News Dropdown Menu */}
-        <Menu
-          anchorEl={newsAnchorEl}
-          open={Boolean(newsAnchorEl)}
-          onClose={handleNewsClose}
-          TransitionComponent={Fade}
-          MenuListProps={{
-            'aria-labelledby': 'news-button',
+        {Boolean(newsAnchorEl) && (
+          <Box sx={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
           }}
-          PaperProps={{
-            sx: {
+          onMouseEnter={() => setNewsAnchorEl(newsAnchorEl)}
+          onMouseLeave={handleNewsLeave}
+          >
+            <Box sx={{ 
+              display: 'flex',
               backgroundColor: theme.palette.primary.main,
               color: 'white',
-              minWidth: 200,
-              '& .MuiMenuItem-root': {
-                color: 'white',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                padding: '12px 24px',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                },
-              },
-            },
-          }}
-        >
-          {newsCategories.map((category, index) => (
-            <MenuItem 
-              key={index} 
-              onClick={handleNewsClose}
-              component="a"
-              href={category.href}
-              sx={{ textDecoration: 'none' }}
-            >
-              {category.label}
-            </MenuItem>
-          ))}
-        </Menu>
+            }}>
+              {newsCategories.map((category, index) => (
+                <Box key={index} component="a" href={category.href} sx={{
+                  color: 'white',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  px: 3,
+                  py: 2,
+                  borderRight: index < newsCategories.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}>
+                  {category.label}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
 
         {/* Lifestyle Dropdown Menu */}
-        <Menu
-          anchorEl={lifestyleAnchorEl}
-          open={Boolean(lifestyleAnchorEl)}
-          onClose={handleLifestyleClose}
-          TransitionComponent={Fade}
-          MenuListProps={{
-            'aria-labelledby': 'lifestyle-button',
+        {Boolean(lifestyleAnchorEl) && (
+          <Box sx={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
           }}
-          PaperProps={{
-            sx: {
-              backgroundColor: theme.palette.primary.main,
-              color: 'white',
-              minWidth: 250,
-              '& .MuiMenuItem-root': {
-                color: 'white',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                padding: '12px 24px',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                },
-              },
-            },
-          }}
-        >
-          {renderMenuItems(lifestyleCategories, handleLifestyleClose)}
-        </Menu>
+          onMouseEnter={() => setLifestyleAnchorEl(lifestyleAnchorEl)}
+          onMouseLeave={handleLifestyleLeave}
+          >
+            {renderHorizontalMenu(lifestyleCategories)}
+          </Box>
+        )}
 
         {/* Arts and Entertainment Dropdown Menu */}
-        <Menu
-          anchorEl={artsAnchorEl}
-          open={Boolean(artsAnchorEl)}
-          onClose={handleArtsClose}
-          TransitionComponent={Fade}
-          MenuListProps={{
-            'aria-labelledby': 'arts-button',
+        {Boolean(artsAnchorEl) && (
+          <Box sx={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
           }}
-          PaperProps={{
-            sx: {
-              backgroundColor: theme.palette.primary.main,
-              color: 'white',
-              minWidth: 250,
-              '& .MuiMenuItem-root': {
-                color: 'white',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                padding: '12px 24px',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                },
-              },
-            },
-          }}
-        >
-          {renderMenuItems(artsCategories, handleArtsClose)}
-        </Menu>
+          onMouseEnter={() => setArtsAnchorEl(artsAnchorEl)}
+          onMouseLeave={handleArtsLeave}
+          >
+            {renderHorizontalMenu(artsCategories)}
+          </Box>
+        )}
       </Container>
     </Box>
   );
