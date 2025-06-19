@@ -3,7 +3,7 @@ import './App.css';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
-import Header from './components/Header';
+import HeaderWithWordPress from './components/Header/HeaderWithWordPress';
 import Homepage from './components/Homepage';
 
 const App: React.FC = () => {
@@ -11,7 +11,7 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div className="App">
-        <Header />
+        <HeaderWithWordPress />
         <Homepage />
       </div>
     </ThemeProvider>
