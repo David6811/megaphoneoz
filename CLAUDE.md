@@ -32,9 +32,12 @@ This is a React application called "megaphoneoz" bootstrapped with Create React 
 - Test files should be named `*.test.js` or placed in `__tests__/` folders
 - Setup configured in `src/setupTests.js`
 
-### Styling
-- Uses CSS files imported directly into components
-- Main styles in `src/App.css` and `src/index.css`
+### Styling Strategy: Material-First, Tailwind-Second
+- **Primary**: Material-UI components with `sx` prop and theme values
+- **Secondary**: Tailwind utilities only for features Material doesn't provide
+- **Priority Order**: Material components → Material theme → Tailwind utilities
+- See `STYLING_STRATEGY.md` for detailed guidelines
+- Theme configuration in `src/theme/index.ts`
 
 ## Development Notes
 
