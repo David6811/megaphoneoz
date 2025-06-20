@@ -220,17 +220,16 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
     );
   };
 
-  // Show loading state
+  // Show fallback immediately while loading
   if (loading) {
-    return (
-      <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50 }} className={className}>
-        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary, height: 180 }}>
-          <Container maxWidth="xl" sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography>Loading menu...</Typography>
-          </Container>
-        </AppBar>
-      </Box>
-    );
+    // Use fallback data immediately
+    setMenuData({
+      navigationItems: fallbackNavigationItems,
+      newsCategories: fallbackNewsCategories,
+      lifestyleCategories: fallbackLifestyleCategories,
+      artsCategories: fallbackArtsCategories
+    });
+    setLoading(false);
   }
 
   return (

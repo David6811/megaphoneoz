@@ -22,10 +22,10 @@
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.loading, .error {
+.error {
   text-align: center;
-  padding: 60px 20px;
-  font-size: 18px;
+  padding: 20px;
+  font-size: 16px;
 }
 
 .error {
@@ -36,9 +36,6 @@
   margin: 20px;
 }
 
-.loading {
-  color: #666;
-}
 
 /* Page Title */
 .page-title {

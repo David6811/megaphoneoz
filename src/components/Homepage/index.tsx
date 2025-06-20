@@ -8,7 +8,6 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
   const [featuredArticles, setFeaturedArticles] = useState<SlideData[]>([]);
   const [newsArticles, setNewsArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Fallback data
   const fallbackFeaturedArticles: SlideData[] = [
@@ -95,8 +94,10 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
   useEffect(() => {
     const fetchNewsData = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        // Start with fallback data immediately
+        setFeaturedArticles(fallbackFeaturedArticles);
+        setNewsArticles(fallbackNewsArticles);
+        setLoading(false);
         
         const newsService = new WordPressNewsService();
         const wpArticles = await newsService.getLatestNewsForSlider(9);
@@ -107,17 +108,11 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           setNewsArticles(articles);
           console.log('Successfully loaded WordPress news articles:', wpArticles.length);
         } else {
-          console.warn('No WordPress articles found, using fallback data');
-          setFeaturedArticles(fallbackFeaturedArticles);
-          setNewsArticles(fallbackNewsArticles);
+          console.warn('No WordPress articles found, keeping fallback data');
         }
       } catch (error) {
         console.error('Error loading WordPress news:', error);
-        setError('Failed to load latest news');
-        setFeaturedArticles(fallbackFeaturedArticles);
-        setNewsArticles(fallbackNewsArticles);
-      } finally {
-        setLoading(false);
+        // Keep fallback data that's already set
       }
     };
 
@@ -194,30 +189,28 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     "Arctic sea ice melts"
   ];
 
-  // Show loading state
+  // Initialize with fallback data immediately
   if (loading) {
+    // Show content immediately with fallback data
     return (
       <div className={`homepage ${className}`}>
         <div className="main-layout">
-          <div className="loading">Loading latest news...</div>
+          <div className="top-content">
+            <div className="main-column">
+              <div className="featured-content">
+                <FeaturedSlider slides={fallbackFeaturedArticles} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Show error state with fallback
-  if (error) {
-    console.warn('Using fallback data due to error:', error);
-  }
 
   return (
     <div className={`homepage ${className}`}>
       <div className="main-layout">
-        {error && (
-          <div className="error">
-            {error} - Using cached content
-          </div>
-        )}
         <div className="top-content">
           {/* Left Column - Featured Slider + News */}
           <div className="main-column">

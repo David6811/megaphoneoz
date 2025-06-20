@@ -11,13 +11,11 @@ interface ContactUsData {
 
 const ContactUs: React.FC = () => {
   const [contactUsData, setContactUsData] = useState<ContactUsData>({ page: null, comments: [] });
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadContactUsPage = async () => {
       try {
-        setLoading(true);
         const pagesService = new WordPressPagesService();
         const result = await pagesService.getPageWithComments('contact-us');
         
@@ -30,11 +28,10 @@ const ContactUs: React.FC = () => {
       } catch (err) {
         console.error('Error loading Contact Us page:', err);
         setError('Failed to load Contact Us page');
-      } finally {
-        setLoading(false);
       }
     };
 
+    // Start loading immediately
     loadContactUsPage();
   }, []);
 
@@ -48,18 +45,20 @@ const ContactUs: React.FC = () => {
     return { __html: content };
   };
 
-  if (loading) {
-    return (
-      <div className="contact-us-container">
-        <div className="loading">Loading Contact Us page...</div>
-      </div>
-    );
-  }
-
   if (error || !contactUsData.page) {
     return (
       <div className="contact-us-container">
-        <div className="error">{error || 'Page not found'}</div>
+        <div className="contact-us-layout">
+          <div className="contact-us-main">
+            <div className="contact-us-content">
+              <h1 className="page-title">Contact Us</h1>
+              <div className="wordpress-content">
+                <p>Loading content...</p>
+              </div>
+            </div>
+          </div>
+          <Sidebar />
+        </div>
       </div>
     );
   }

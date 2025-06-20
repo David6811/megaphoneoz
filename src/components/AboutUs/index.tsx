@@ -11,13 +11,11 @@ interface AboutUsData {
 
 const AboutUs: React.FC = () => {
   const [aboutUsData, setAboutUsData] = useState<AboutUsData>({ page: null, comments: [] });
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadAboutUsPage = async () => {
       try {
-        setLoading(true);
         const pagesService = new WordPressPagesService();
         const result = await pagesService.getPageWithComments('about-us');
         
@@ -30,11 +28,10 @@ const AboutUs: React.FC = () => {
       } catch (err) {
         console.error('Error loading About Us page:', err);
         setError('Failed to load About Us page');
-      } finally {
-        setLoading(false);
       }
     };
 
+    // Start loading immediately
     loadAboutUsPage();
   }, []);
 
@@ -48,18 +45,20 @@ const AboutUs: React.FC = () => {
     return { __html: content };
   };
 
-  if (loading) {
-    return (
-      <div className="about-us-container">
-        <div className="loading">Loading About Us page...</div>
-      </div>
-    );
-  }
-
   if (error || !aboutUsData.page) {
     return (
       <div className="about-us-container">
-        <div className="error">{error || 'Page not found'}</div>
+        <div className="about-us-layout">
+          <div className="about-us-main">
+            <div className="about-us-content">
+              <h1 className="page-title">About Us</h1>
+              <div className="wordpress-content">
+                <p>Loading content...</p>
+              </div>
+            </div>
+          </div>
+          <Sidebar />
+        </div>
       </div>
     );
   }
