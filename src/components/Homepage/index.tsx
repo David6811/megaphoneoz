@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import FeaturedSlider from '../FeaturedSlider';
 import { HomepageProps, SlideData, Article, Comment } from '../../types';
+import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
 import './Homepage.css';
 
 const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
-  
-  const featuredArticles: SlideData[] = [
+  const [featuredArticles, setFeaturedArticles] = useState<SlideData[]>([]);
+  const [newsArticles, setNewsArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fallback data
+  const fallbackFeaturedArticles: SlideData[] = [
     {
       id: 1,
       title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
@@ -29,7 +35,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     }
   ];
 
-  const newsArticles: Article[] = [
+  const fallbackNewsArticles: Article[] = [
     {
       id: 1,
       title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION",
@@ -60,6 +66,63 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       image: "https://picsum.photos/400/250?random=7"
     }
   ];
+
+  // Transform WordPress news data to component format
+  const transformNewsData = (wpArticles: FormattedNewsArticle[]): { slides: SlideData[], articles: Article[] } => {
+    const slides: SlideData[] = wpArticles.slice(0, 5).map(article => ({
+      id: article.id,
+      title: article.title,
+      date: article.date,
+      image: article.image,
+      category: article.category
+    }));
+
+    // For NEWS section: 1 featured article + 3 sidebar articles = 4 total
+    const articles: Article[] = wpArticles.slice(0, 4).map(article => ({
+      id: article.id,
+      title: article.title,
+      date: article.date,
+      image: article.image,
+      excerpt: article.excerpt,
+      comments: 0, // WordPress doesn't provide comment count in this endpoint
+      category: article.category
+    }));
+
+    return { slides, articles };
+  };
+
+  // Fetch WordPress news data
+  useEffect(() => {
+    const fetchNewsData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const newsService = new WordPressNewsService();
+        const wpArticles = await newsService.getLatestNewsForSlider(9);
+        
+        if (wpArticles && wpArticles.length > 0) {
+          const { slides, articles } = transformNewsData(wpArticles);
+          setFeaturedArticles(slides);
+          setNewsArticles(articles);
+          console.log('Successfully loaded WordPress news articles:', wpArticles.length);
+        } else {
+          console.warn('No WordPress articles found, using fallback data');
+          setFeaturedArticles(fallbackFeaturedArticles);
+          setNewsArticles(fallbackNewsArticles);
+        }
+      } catch (error) {
+        console.error('Error loading WordPress news:', error);
+        setError('Failed to load latest news');
+        setFeaturedArticles(fallbackFeaturedArticles);
+        setNewsArticles(fallbackNewsArticles);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNewsData();
+  }, []);
 
   const artsArticles: Article[] = [
     {
@@ -131,9 +194,30 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     "Arctic sea ice melts"
   ];
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className={`homepage ${className}`}>
+        <div className="main-layout">
+          <div className="loading">Loading latest news...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state with fallback
+  if (error) {
+    console.warn('Using fallback data due to error:', error);
+  }
+
   return (
     <div className={`homepage ${className}`}>
       <div className="main-layout">
+        {error && (
+          <div className="error">
+            {error} - Using cached content
+          </div>
+        )}
         <div className="top-content">
           {/* Left Column - Featured Slider + News */}
           <div className="main-column">
