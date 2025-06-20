@@ -1,3 +1,5 @@
+import { apiCache } from '../utils/cache';
+
 interface WordPressPost {
   id: number;
   date: string;
@@ -102,6 +104,12 @@ class WordPressNewsService {
   }
 
   async fetchLatestPosts(limit: number = 5): Promise<WordPressPost[]> {
+    const cacheKey = `latest-posts-${limit}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     try {
       const response = await fetch(`${this.API_BASE}/posts?per_page=${limit}&status=publish&_embed`, {
         headers: {
@@ -114,7 +122,9 @@ class WordPressNewsService {
         throw new Error(`Failed to fetch posts: ${response.status}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      apiCache.set(cacheKey, result, 3); // Cache posts for 3 minutes
+      return result;
     } catch (error) {
       console.error('Error fetching WordPress posts:', error);
       throw error;

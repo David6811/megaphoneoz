@@ -1,3 +1,5 @@
+import { apiCache } from '../utils/cache';
+
 interface WordPressPage {
   id: number;
   date: string;
@@ -124,6 +126,12 @@ class WordPressPagesService {
   }
 
   async fetchPageBySlug(slug: string): Promise<WordPressPage | null> {
+    const cacheKey = `page-slug-${slug}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     try {
       const response = await fetch(`${this.API_BASE}/pages?slug=${slug}&status=publish`, {
         headers: {
@@ -137,7 +145,13 @@ class WordPressPagesService {
       }
 
       const pages = await response.json();
-      return pages.length > 0 ? pages[0] : null;
+      const result = pages.length > 0 ? pages[0] : null;
+      
+      if (result) {
+        apiCache.set(cacheKey, result, 10); // Cache for 10 minutes
+      }
+      
+      return result;
     } catch (error) {
       console.error('Error fetching WordPress page by slug:', error);
       return null;
@@ -165,6 +179,12 @@ class WordPressPagesService {
   }
 
   async fetchCommentsForPage(pageId: number): Promise<WordPressComment[]> {
+    const cacheKey = `comments-${pageId}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     try {
       const response = await fetch(`${this.API_BASE}/comments?post=${pageId}&status=approve&per_page=100`, {
         headers: {
@@ -177,7 +197,9 @@ class WordPressPagesService {
         throw new Error(`Failed to fetch comments: ${response.status}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      apiCache.set(cacheKey, result, 5); // Cache comments for 5 minutes
+      return result;
     } catch (error) {
       console.error('Error fetching WordPress comments:', error);
       return [];
