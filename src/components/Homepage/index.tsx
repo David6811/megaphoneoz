@@ -133,38 +133,57 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
 
   return (
     <div className={`homepage ${className}`}>
-      <FeaturedSlider slides={featuredArticles} />
-
       <div className="main-layout">
-        <div className="content-columns">
-          {/* Main Content */}
-          <main className="main-content">
+        <div className="top-content">
+          {/* Left Column - Featured Slider + News */}
+          <div className="main-column">
+            <div className="featured-content">
+              <FeaturedSlider slides={featuredArticles} />
+            </div>
+            
             {/* News Section */}
             <section className="news-section">
               <h2 className="section-title">NEWS</h2>
               <div className="articles-grid">
-                {newsArticles.map((article: Article, index: number) => (
-                  <article key={article.id} className={`article-item ${index === 0 ? 'featured-article' : ''}`}>
-                    <div className="article-image">
-                      <img src={article.image} alt={article.title} />
+                {/* Featured Article */}
+                <article className="article-item featured-article">
+                  <div className="article-image">
+                    <img src={newsArticles[0].image} alt={newsArticles[0].title} />
+                  </div>
+                  <div className="article-content">
+                    <h3 className="article-title">{newsArticles[0].title}</h3>
+                    {newsArticles[0].excerpt && <p className="article-excerpt">{newsArticles[0].excerpt}</p>}
+                    <div className="article-meta">
+                      <span className="article-date">{newsArticles[0].date}</span>
+                      <span className="article-comments">💬 {newsArticles[0].comments}</span>
                     </div>
-                    <div className="article-content">
-                      <h3 className="article-title">{article.title}</h3>
-                      {article.excerpt && <p className="article-excerpt">{article.excerpt}</p>}
-                      <div className="article-meta">
-                        <span className="article-date">{article.date}</span>
-                        <span className="article-comments">💬 {article.comments}</span>
+                  </div>
+                </article>
+                
+                {/* Sidebar Articles */}
+                <div className="articles-sidebar">
+                  {newsArticles.slice(1).map((article: Article) => (
+                    <article key={article.id} className="article-item">
+                      <div className="article-image">
+                        <img src={article.image} alt={article.title} />
                       </div>
-                    </div>
-                  </article>
-                ))}
+                      <div className="article-content">
+                        <h3 className="article-title">{article.title}</h3>
+                        <div className="article-meta">
+                          <span className="article-date">{article.date}</span>
+                          <span className="article-comments">💬 {article.comments}</span>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </div>
             </section>
 
             {/* Arts and Entertainment Section */}
             <section className="arts-section">
               <h2 className="section-title">ARTS AND ENTERTAINMENT</h2>
-              <div className="articles-grid">
+              <div className="arts-articles-grid">
                 {artsArticles.map((article: Article) => (
                   <article key={article.id} className="article-item">
                     <div className="article-image">
@@ -182,9 +201,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
                 ))}
               </div>
             </section>
-          </main>
+          </div>
 
-          {/* Sidebar */}
+          {/* Right Column - Sidebar */}
           <aside className="sidebar">
             {/* Search */}
             <div className="sidebar-section">
@@ -198,10 +217,11 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             <div className="sidebar-section">
               <h3 className="sidebar-title">FOLLOW US</h3>
               <div className="social-icons">
-                <a href="#" className="social-icon facebook">📘</a>
-                <a href="#" className="social-icon instagram">📷</a>
-                <a href="#" className="social-icon twitter">🐦</a>
-                <a href="#" className="social-icon youtube">📺</a>
+                <a href="http://www.facebook.com/MegaphoneOz" target="_blank" rel="noopener noreferrer" className="social-icon facebook">f</a>
+                <a href="https://www.flickr.com/photos/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon flickr">fl</a>
+                <a href="http://instagram.com/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon instagram">📷</a>
+                <a href="https://twitter.com/MegaphoneOZ" target="_blank" rel="noopener noreferrer" className="social-icon twitter">t</a>
+                <a href="https://www.youtube.com/channel/UCsp_yc-87m1D5BnUYCoxTAw" target="_blank" rel="noopener noreferrer" className="social-icon youtube">▶</a>
               </div>
             </div>
 
