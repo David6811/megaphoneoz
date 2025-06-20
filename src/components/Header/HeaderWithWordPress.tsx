@@ -28,7 +28,7 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
     { label: 'Arts and Entertainment', href: '#', hasDropdown: true },
     { label: 'Opinion', href: '/opinion' },
     { label: 'Contact Us', href: '/contact' },
-    { label: 'About Us', href: '/about' },
+    { label: 'About Us', href: '/about-us' },
     { label: 'Coming Up', href: '/coming-up' },
   ];
 
