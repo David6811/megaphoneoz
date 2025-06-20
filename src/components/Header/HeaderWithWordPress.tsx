@@ -280,20 +280,6 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                   <span style={{ color: theme.palette.secondary.main }}>MEGAPHONE</span>
                   <span style={{ color: theme.palette.primary.main }}>OZ</span>
                 </Typography>
-                {/* WordPress Menu Status Indicator (only in development) */}
-                {process.env.NODE_ENV === 'development' && (
-                  <Box sx={{ 
-                    ml: 2, 
-                    px: 1, 
-                    py: 0.5, 
-                    backgroundColor: menuData?.navigationItems === fallbackNavigationItems ? 'orange' : 'green',
-                    color: 'white',
-                    fontSize: '0.7rem',
-                    borderRadius: 1
-                  }}>
-                    {menuData?.navigationItems === fallbackNavigationItems ? 'Fallback Menu' : 'WordPress Menu'}
-                  </Box>
-                )}
               </Box>
               {isMobile && (
                 <IconButton
