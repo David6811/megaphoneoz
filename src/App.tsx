@@ -8,6 +8,7 @@ import HeaderWithWordPress from './components/Header/HeaderWithWordPress';
 import Homepage from './components/Homepage';
 import AboutUs from './components/AboutUs';
 import ContactUs from './components/ContactUs';
+import Footer from './components/Footer';
 
 const App: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ const App: React.FC = () => {
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
           </Routes>
+          <Footer />
         </div>
       </Router>
     </ThemeProvider>
