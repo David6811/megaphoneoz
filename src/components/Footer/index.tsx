@@ -1,14 +1,133 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ImageGallerySlider from '../ImageGallerySlider';
+import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
 import './Footer.css';
 
+interface GalleryImage {
+  id: number;
+  src: string;
+  alt: string;
+  title?: string;
+  date?: string;
+}
+
 const Footer: React.FC = () => {
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+
+  // Fallback images
+  const fallbackImages: GalleryImage[] = [
+    {
+      id: 1,
+      src: "https://picsum.photos/200/150?random=1",
+      alt: "Review: Skank Sinatra",
+      title: "REVIEW: SKANK",
+      date: "June 15, 2025"
+    },
+    {
+      id: 2,
+      src: "https://picsum.photos/200/150?random=2",
+      alt: "SU Anime Society",
+      title: "SU ANIME",
+      date: "June 15, 2025"
+    },
+    {
+      id: 3,
+      src: "https://picsum.photos/200/150?random=3",
+      alt: "Arts Review",
+      title: "ARTS REVIEW",
+      date: "June 13, 2025"
+    },
+    {
+      id: 4,
+      src: "https://picsum.photos/200/150?random=4",
+      alt: "Music Concert",
+      title: "MUSIC",
+      date: "June 1, 2025"
+    },
+    {
+      id: 5,
+      src: "https://picsum.photos/200/150?random=5",
+      alt: "Theatre Review",
+      title: "THEATRE",
+      date: "May 28, 2025"
+    },
+    {
+      id: 6,
+      src: "https://picsum.photos/200/150?random=6",
+      alt: "Film Festival",
+      title: "FILM",
+      date: "May 25, 2025"
+    },
+    {
+      id: 7,
+      src: "https://picsum.photos/200/150?random=7",
+      alt: "Cultural Event",
+      title: "CULTURE",
+      date: "May 20, 2025"
+    },
+    {
+      id: 8,
+      src: "https://picsum.photos/200/150?random=8",
+      alt: "Exhibition",
+      title: "EXHIBITION",
+      date: "May 15, 2025"
+    },
+    {
+      id: 9,
+      src: "https://picsum.photos/200/150?random=9",
+      alt: "Performance",
+      title: "PERFORMANCE",
+      date: "May 10, 2025"
+    },
+    {
+      id: 10,
+      src: "https://picsum.photos/200/150?random=10",
+      alt: "Gallery Opening",
+      title: "GALLERY",
+      date: "May 5, 2025"
+    }
+  ];
+
+  // Fetch WordPress images
+  useEffect(() => {
+    const fetchGalleryImages = async () => {
+      try {
+        // Start with fallback images
+        setGalleryImages(fallbackImages);
+        
+        const newsService = new WordPressNewsService();
+        const articles = await newsService.getLatestNewsForSlider(10);
+        
+        if (articles && articles.length > 0) {
+          const transformedImages: GalleryImage[] = articles.map(article => ({
+            id: article.id,
+            src: article.image,
+            alt: article.title,
+            title: article.title.length > 20 ? article.title.substring(0, 20) + '...' : article.title,
+            date: article.date
+          }));
+          
+          setGalleryImages(transformedImages);
+          console.log('Successfully loaded WordPress images for footer gallery:', transformedImages.length);
+        } else {
+          console.warn('No WordPress articles found for gallery, keeping fallback images');
+        }
+      } catch (error) {
+        console.error('Error loading WordPress images for gallery:', error);
+        // Keep fallback images that are already set
+      }
+    };
+
+    fetchGalleryImages();
+  }, []);
+
   return (
     <footer className="footer">
       {/* Image Gallery Slider at the top */}
       <div className="footer-gallery-section">
         <div className="footer-gallery-container">
           <ImageGallerySlider 
+            images={galleryImages}
             autoPlay={true}
             autoPlayInterval={3000}
             visibleCount={8}

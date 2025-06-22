@@ -6,6 +6,7 @@ interface GalleryImage {
   src: string;
   alt: string;
   title?: string;
+  date?: string;
 }
 
 interface ImageGallerySliderProps {
@@ -22,6 +23,7 @@ const ImageGallerySlider: React.FC<ImageGallerySliderProps> = ({
   visibleCount = 8
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
   // Default fallback images if none provided
   const defaultImages: GalleryImage[] = [
@@ -119,6 +121,10 @@ const ImageGallerySlider: React.FC<ImageGallerySliderProps> = ({
   // Don't show navigation if all images fit
   const showNavigation = totalImages > visibleCount;
 
+  const selectImage = (image: GalleryImage) => {
+    setSelectedImage(selectedImage?.id === image.id ? null : image);
+  };
+
   return (
     <div className="image-gallery-slider">
       <div className="gallery-container">
@@ -140,19 +146,28 @@ const ImageGallerySlider: React.FC<ImageGallerySliderProps> = ({
             }}
           >
             {galleryImages.map((image) => (
-              <div key={image.id} className="gallery-item">
-                <div className="gallery-image-container">
+              <div key={image.id} className={`gallery-item ${selectedImage?.id === image.id ? 'expanded' : ''}`}>
+                <div 
+                  className={`gallery-image-container ${selectedImage?.id === image.id ? 'selected' : ''}`}
+                  onClick={() => selectImage(image)}
+                >
                   <img 
                     src={image.src} 
                     alt={image.alt}
                     className="gallery-image"
                   />
-                  {image.title && (
+                  {image.title && !selectedImage && (
                     <div className="gallery-overlay">
                       <span className="gallery-title">{image.title}</span>
                     </div>
                   )}
                 </div>
+                {selectedImage?.id === image.id && (
+                  <div className="gallery-text-area">
+                    <h3 className="gallery-expanded-title">{image.title}</h3>
+                    <p className="gallery-expanded-date">{image.date || "June 15, 2025"}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -169,19 +184,6 @@ const ImageGallerySlider: React.FC<ImageGallerySliderProps> = ({
         )}
       </div>
 
-      {/* Dots indicator */}
-      {showNavigation && (
-        <div className="gallery-dots">
-          {Array.from({ length: maxIndex + 1 }, (_, index) => (
-            <button
-              key={index}
-              className={`gallery-dot ${index === currentIndex ? 'active' : ''}`}
-              onClick={() => setCurrentIndex(index)}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 };
