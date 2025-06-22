@@ -7,6 +7,7 @@ import './Homepage.css';
 const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
   const [featuredArticles, setFeaturedArticles] = useState<SlideData[]>([]);
   const [newsArticles, setNewsArticles] = useState<Article[]>([]);
+  const [artsArticles, setArtsArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fallback data
@@ -97,9 +98,12 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
         // Start with fallback data immediately
         setFeaturedArticles(fallbackFeaturedArticles);
         setNewsArticles(fallbackNewsArticles);
+        setArtsArticles(fallbackArtsArticles);
         setLoading(false);
         
         const newsService = new WordPressNewsService();
+        
+        // Fetch general news
         const wpArticles = await newsService.getLatestNewsForSlider(9);
         
         if (wpArticles && wpArticles.length > 0) {
@@ -110,6 +114,30 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
         } else {
           console.warn('No WordPress articles found, keeping fallback data');
         }
+
+        // Fetch arts and entertainment articles
+        try {
+          const artsArticles = await newsService.getLatestNewsByCategory('arts-entertainment', 4);
+          if (artsArticles && artsArticles.length > 0) {
+            const transformedArtsArticles: Article[] = artsArticles.map(article => ({
+              id: article.id,
+              title: article.title,
+              date: article.date,
+              image: article.image,
+              excerpt: article.excerpt,
+              comments: 0,
+              category: article.category
+            }));
+            setArtsArticles(transformedArtsArticles);
+            console.log('Successfully loaded WordPress arts articles:', artsArticles.length);
+          } else {
+            console.warn('No WordPress arts articles found, keeping fallback data');
+          }
+        } catch (artsError) {
+          console.error('Error loading WordPress arts articles:', artsError);
+          // Keep fallback arts data
+        }
+        
       } catch (error) {
         console.error('Error loading WordPress news:', error);
         // Keep fallback data that's already set
@@ -119,7 +147,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     fetchNewsData();
   }, []);
 
-  const artsArticles: Article[] = [
+  const fallbackArtsArticles: Article[] = [
     {
       id: 1,
       title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
