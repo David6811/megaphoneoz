@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ImageGallerySlider from '../ImageGallerySlider';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import WordPressNewsService from '../../services/wordpressNewsService';
 import './Footer.css';
 
 interface GalleryImage {
@@ -118,7 +118,7 @@ const Footer: React.FC = () => {
     };
 
     fetchGalleryImages();
-  }, [fallbackImages]);
+  }, []);
 
   return (
     <footer className="footer">

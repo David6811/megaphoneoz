@@ -67,6 +67,41 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     }
   ];
 
+  const fallbackArtsArticles: Article[] = [
+    {
+      id: 1,
+      title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
+      date: "June 15, 2025",
+      comments: 0,
+      image: "",
+      excerpt: "It's hard to imagine Skank Sinatra (the alter persona of Jens Radda) as anything other than a glamorous, over-the-top cabaret queen..."
+    },
+    {
+      id: 2,
+      title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
+      date: "June 15, 2025",
+      comments: 1,
+      image: "",
+      excerpt: "Game lovers, cosplayers and visitors joined Sydney University Anime Society for a Wuthering Waves game-themed event celebrating its first anniversary at..."
+    },
+    {
+      id: 3,
+      title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
+      date: "June 13, 2025",
+      comments: 0,
+      image: "",
+      excerpt: "Check into another world when you book yourself into L'Hotel. It's a head-spinning mix of burlesque, cabaret and circus expertise with..."
+    },
+    {
+      id: 4,
+      title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
+      date: "June 1, 2025",
+      comments: 0,
+      image: "",
+      excerpt: "'This is Our Happy Place' declares the sign on the classroom where the school's Executive Committee (all parent volunteers, of..."
+    }
+  ];
+
   // Transform WordPress news data to component format
   const transformNewsData = (wpArticles: FormattedNewsArticle[]): { slides: SlideData[], articles: Article[] } => {
     const slides: SlideData[] = wpArticles.slice(0, 5).map(article => ({
@@ -160,42 +195,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     };
 
     fetchNewsData();
-  }, []);
-
-  const fallbackArtsArticles: Article[] = [
-    {
-      id: 1,
-      title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
-      date: "June 15, 2025",
-      comments: 0,
-      image: "",
-      excerpt: "It's hard to imagine Skank Sinatra (the alter persona of Jens Radda) as anything other than a glamorous, over-the-top cabaret queen..."
-    },
-    {
-      id: 2,
-      title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
-      date: "June 15, 2025",
-      comments: 1,
-      image: "",
-      excerpt: "Game lovers, cosplayers and visitors joined Sydney University Anime Society for a Wuthering Waves game-themed event celebrating its first anniversary at..."
-    },
-    {
-      id: 3,
-      title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
-      date: "June 13, 2025",
-      comments: 0,
-      image: "",
-      excerpt: "Check into another world when you book yourself into L'Hotel. It's a head-spinning mix of burlesque, cabaret and circus expertise with..."
-    },
-    {
-      id: 4,
-      title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
-      date: "June 1, 2025",
-      comments: 0,
-      image: "",
-      excerpt: "'This is Our Happy Place' declares the sign on the classroom where the school's Executive Committee (all parent volunteers, of..."
-    }
-  ];
+  }, [fallbackFeaturedArticles, fallbackNewsArticles, fallbackArtsArticles]);
 
   const recentArticles: string[] = [
     "REVIEW: HAIRSPRAY",
@@ -351,7 +351,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               <h3 className="sidebar-title">RECENT ARTICLES</h3>
               <ul className="recent-list">
                 {recentArticles.map((article: string, index: number) => (
-                  <li key={index}><a href="#">{article}</a></li>
+                  <li key={index}><a href="/articles" role="button" tabIndex={0}>{article}</a></li>
                 ))}
               </ul>
             </div>
@@ -362,7 +362,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               <ul className="recent-comments">
                 {recentComments.map((comment: Comment, index: number) => (
                   <li key={index}>
-                    <strong>{comment.author}</strong> on <a href="#">{comment.post}</a>
+                    <strong>{comment.author}</strong> on <a href="/posts" role="button" tabIndex={0}>{comment.post}</a>
                   </li>
                 ))}
               </ul>
@@ -373,11 +373,11 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               <h3 className="sidebar-title">BEST OF THE REST</h3>
               <ul className="best-of-list">
                 {bestOfRest.map((item: string, index: number) => (
-                  <li key={index}>📰 <a href="#">{item}</a></li>
+                  <li key={index}>📰 <a href="/news" role="button" tabIndex={0}>{item}</a></li>
                 ))}
               </ul>
               <div className="login-link">
-                <a href="#">MegaphoneOz Users: Login</a>
+                <a href="/login" role="button" tabIndex={0}>MegaphoneOz Users: Login</a>
               </div>
             </div>
           </aside>

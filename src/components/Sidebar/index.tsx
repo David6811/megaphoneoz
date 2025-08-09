@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
         <h3 className="sidebar-title">RECENT ARTICLES</h3>
         <ul className="recent-list">
           {recentArticles.map((article: string, index: number) => (
-            <li key={index}><a href="#">{article}</a></li>
+            <li key={index}><a href="/articles" role="button" tabIndex={0}>{article}</a></li>
           ))}
         </ul>
       </div>
@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
         <ul className="recent-comments">
           {recentComments.map((comment: Comment, index: number) => (
             <li key={index}>
-              <strong>{comment.author}</strong> on <a href="#">{comment.post}</a>
+              <strong>{comment.author}</strong> on <a href="/posts" role="button" tabIndex={0}>{comment.post}</a>
             </li>
           ))}
         </ul>
@@ -107,11 +107,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
         <h3 className="sidebar-title">BEST OF THE REST</h3>
         <ul className="best-of-list">
           {bestOfRest.map((item: string, index: number) => (
-            <li key={index}>📰 <a href="#">{item}</a></li>
+            <li key={index}>📰 <a href="/news" role="button" tabIndex={0}>{item}</a></li>
           ))}
         </ul>
         <div className="login-link">
-          <a href="#">MegaphoneOz Users: Login</a>
+          <a href="/login" role="button" tabIndex={0}>MegaphoneOz Users: Login</a>
         </div>
       </div>
     </aside>
