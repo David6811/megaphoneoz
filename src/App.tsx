@@ -19,6 +19,7 @@ const App: React.FC = () => {
           <HeaderWithWordPress />
           <Routes>
             <Route path="/" element={<Homepage />} />
+            <Route path="/megaphoneoz" element={<Homepage />} />
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
           </Routes>
