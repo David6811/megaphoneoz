@@ -101,7 +101,7 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
     };
 
     fetchMenuData();
-  }, [fallbackNavigationItems, fallbackNewsCategories, fallbackLifestyleCategories, fallbackArtsCategories]);
+  }, []);
 
   // Use WordPress data if available, otherwise fallback
   const navigationItems: NavigationItem[] = menuData?.navigationItems || fallbackNavigationItems;
@@ -247,13 +247,13 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
               width: isMobile ? '100%' : 'auto',
               justifyContent: isMobile ? 'space-between' : 'flex-start'
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Box
                   component="img"
-                  src="/cropped-Megaphone-OZ-Logo-02-2.jpg"
+                  src={`${process.env.PUBLIC_URL}/cropped-Megaphone-OZ-Logo-02-2.jpg`}
                   alt="MegaphoneOZ Logo"
                   sx={{
-                    height: isMobile ? '80px' : '150px',
+                    height: isMobile ? '90px' : '120px',
                     width: 'auto',
                     objectFit: 'contain'
                   }}
