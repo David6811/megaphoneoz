@@ -38,12 +38,19 @@ class WordPressMenuService {
 
   async fetchMenuItems(): Promise<WordPressMenuItem[]> {
     try {
+      // Add timeout to prevent hanging requests  
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
       const response = await fetch(`${this.API_BASE}/menu-items`, {
         headers: {
           'Authorization': this.AUTH_HEADER,
           'Content-Type': 'application/json',
         },
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch menu items: ${response.status}`);

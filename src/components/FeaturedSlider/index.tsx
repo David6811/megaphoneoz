@@ -8,6 +8,7 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ slides = [] }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
@@ -58,6 +59,15 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ slides = [] }) => {
 
   const currentSlideData: SlideData = slides[currentSlide];
 
+  // Handle image loading errors
+  const handleImageError = (slideIndex: number) => {
+    setImageErrors(prev => {
+      const newSet = new Set(prev);
+      newSet.add(slideIndex);
+      return newSet;
+    });
+  };
+
   // Responsive height calculation
   const getSliderHeight = () => {
     if (isSmall) return 250;
@@ -94,17 +104,35 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ slides = [] }) => {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <Box
-            component="img"
-            src={currentSlideData.image}
-            alt={currentSlideData.title}
-            sx={{
+          {!imageErrors.has(currentSlide) && (
+            <Box
+              component="img"
+              src={currentSlideData.image}
+              alt={currentSlideData.title}
+              onError={() => handleImageError(currentSlide)}
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block'
+              }}
+            />
+          )}
+          {imageErrors.has(currentSlide) && (
+            <Box sx={{
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
-              display: 'block'
-            }}
-          />
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f5f5f5',
+              border: '2px dashed #ccc'
+            }}>
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', px: 2 }}>
+                Image unavailable
+              </Typography>
+            </Box>
+          )}
           <Box sx={{
             position: 'absolute',
             bottom: 0,

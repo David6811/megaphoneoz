@@ -16,21 +16,21 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       id: 1,
       title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
       date: "June 1, 2025",
-      image: "https://picsum.photos/800/400?random=1",
+      image: "",
       category: "REVIEW"
     },
     {
       id: 2,
       title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH",
       date: "May 26, 2025",
-      image: "https://picsum.photos/800/400?random=2", 
+      image: "", 
       category: "NEWS"
     },
     {
       id: 3,
       title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES",
       date: "October 15, 2024",
-      image: "https://picsum.photos/800/400?random=3",
+      image: "",
       category: "NEWS"
     }
   ];
@@ -41,7 +41,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION",
       date: "May 26, 2025",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=4",
+      image: "",
       excerpt: "Labor's unexpected huge win on May 3 has exploded the federal coalition creating a fracture between the National and Liberal..."
     },
     {
@@ -49,21 +49,56 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES WITH ISRAEL",
       date: "October 15, 2024",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=5"
+      image: ""
     },
     {
       id: 3,
       title: "TAIWAN'S INDIGENOUS WONDER WOMAN RUNS IN ELECTION",
       date: "January 12, 2024",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=6"
+      image: ""
     },
     {
       id: 4,
       title: "LE CYGNE: HAYDN SKINNER AND HIS BELOVED CELLO",
       date: "July 12, 2024",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=7"
+      image: ""
+    }
+  ];
+
+  const fallbackArtsArticles: Article[] = [
+    {
+      id: 1,
+      title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
+      date: "June 15, 2025",
+      comments: 0,
+      image: "",
+      excerpt: "It's hard to imagine Skank Sinatra (the alter persona of Jens Radda) as anything other than a glamorous, over-the-top cabaret queen..."
+    },
+    {
+      id: 2,
+      title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
+      date: "June 15, 2025",
+      comments: 1,
+      image: "",
+      excerpt: "Game lovers, cosplayers and visitors joined Sydney University Anime Society for a Wuthering Waves game-themed event celebrating its first anniversary at..."
+    },
+    {
+      id: 3,
+      title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
+      date: "June 13, 2025",
+      comments: 0,
+      image: "",
+      excerpt: "Check into another world when you book yourself into L'Hotel. It's a head-spinning mix of burlesque, cabaret and circus expertise with..."
+    },
+    {
+      id: 4,
+      title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
+      date: "June 1, 2025",
+      comments: 0,
+      image: "",
+      excerpt: "'This is Our Happy Place' declares the sign on the classroom where the school's Executive Committee (all parent volunteers, of..."
     }
   ];
 
@@ -94,32 +129,49 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
   // Fetch WordPress news data
   useEffect(() => {
     const fetchNewsData = async () => {
+      // Start with fallback data immediately
+      setFeaturedArticles(fallbackFeaturedArticles);
+      setNewsArticles(fallbackNewsArticles);
+      setArtsArticles(fallbackArtsArticles);
+      setLoading(false);
+      
       try {
-        // Start with fallback data immediately
-        setFeaturedArticles(fallbackFeaturedArticles);
-        setNewsArticles(fallbackNewsArticles);
-        setArtsArticles(fallbackArtsArticles);
-        setLoading(false);
+        const newsService = WordPressNewsService.getInstance();
         
-        const newsService = new WordPressNewsService();
+        // Add timeout to prevent hanging
+        const fetchWithTimeout = async (promise: Promise<any>, timeoutMs: number = 8000) => {
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+          );
+          return Promise.race([promise, timeoutPromise]);
+        };
         
-        // Fetch general news
-        const wpArticles = await newsService.getLatestNewsForSlider(9);
-        
-        if (wpArticles && wpArticles.length > 0) {
-          const { slides, articles } = transformNewsData(wpArticles);
-          setFeaturedArticles(slides);
-          setNewsArticles(articles);
-          console.log('Successfully loaded WordPress news articles:', wpArticles.length);
-        } else {
-          console.warn('No WordPress articles found, keeping fallback data');
+        // Fetch general news with timeout
+        try {
+          const wpArticles = await fetchWithTimeout(
+            newsService.getLatestNewsForSlider(9)
+          );
+          
+          if (wpArticles && wpArticles.length > 0) {
+            const { slides, articles } = transformNewsData(wpArticles);
+            setFeaturedArticles(slides);
+            setNewsArticles(articles);
+            console.log('Successfully loaded WordPress news articles:', wpArticles.length);
+          } else {
+            console.warn('No WordPress articles found, keeping fallback data');
+          }
+        } catch (newsError) {
+          console.error('Error loading WordPress news (using fallback):', newsError);
         }
 
-        // Fetch arts and entertainment articles
+        // Fetch arts and entertainment articles with timeout
         try {
-          const artsArticles = await newsService.getLatestNewsByCategory('arts-entertainment', 4);
+          const artsArticles = await fetchWithTimeout(
+            newsService.getLatestNewsByCategory('arts-entertainment', 4)
+          );
+          
           if (artsArticles && artsArticles.length > 0) {
-            const transformedArtsArticles: Article[] = artsArticles.map(article => ({
+            const transformedArtsArticles: Article[] = artsArticles.map((article: FormattedNewsArticle) => ({
               id: article.id,
               title: article.title,
               date: article.date,
@@ -134,53 +186,16 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             console.warn('No WordPress arts articles found, keeping fallback data');
           }
         } catch (artsError) {
-          console.error('Error loading WordPress arts articles:', artsError);
-          // Keep fallback arts data
+          console.error('Error loading WordPress arts articles (using fallback):', artsError);
         }
         
       } catch (error) {
-        console.error('Error loading WordPress news:', error);
-        // Keep fallback data that's already set
+        console.error('Error loading WordPress news (using fallback):', error);
       }
     };
 
     fetchNewsData();
-  }, []);
-
-  const fallbackArtsArticles: Article[] = [
-    {
-      id: 1,
-      title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
-      date: "June 15, 2025",
-      comments: 0,
-      image: "https://picsum.photos/400/250?random=4",
-      excerpt: "It's hard to imagine Skank Sinatra (the alter persona of Jens Radda) as anything other than a glamorous, over-the-top cabaret queen..."
-    },
-    {
-      id: 2,
-      title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
-      date: "June 15, 2025",
-      comments: 1,
-      image: "https://picsum.photos/400/250?random=4",
-      excerpt: "Game lovers, cosplayers and visitors joined Sydney University Anime Society for a Wuthering Waves game-themed event celebrating its first anniversary at..."
-    },
-    {
-      id: 3,
-      title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
-      date: "June 13, 2025",
-      comments: 0,
-      image: "https://picsum.photos/400/250?random=4",
-      excerpt: "Check into another world when you book yourself into L'Hotel. It's a head-spinning mix of burlesque, cabaret and circus expertise with..."
-    },
-    {
-      id: 4,
-      title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
-      date: "June 1, 2025",
-      comments: 0,
-      image: "https://picsum.photos/400/250?random=4",
-      excerpt: "'This is Our Happy Place' declares the sign on the classroom where the school's Executive Committee (all parent volunteers, of..."
-    }
-  ];
+  }, [fallbackFeaturedArticles, fallbackNewsArticles, fallbackArtsArticles]);
 
   const recentArticles: string[] = [
     "REVIEW: HAIRSPRAY",
@@ -330,23 +345,13 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               </div>
             </div>
 
-            {/* Featured Video */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">JAYA BALENDRA: EXPOSED LUNA PARK GHOST TRAIN FIRE</h3>
-              <div className="video-player">
-                <div className="video-thumbnail">
-                  <img src="https://picsum.photos/300/200?random=10" alt="Video thumbnail" />
-                  <div className="play-button">▶</div>
-                </div>
-              </div>
-            </div>
 
             {/* Recent Articles */}
             <div className="sidebar-section">
               <h3 className="sidebar-title">RECENT ARTICLES</h3>
               <ul className="recent-list">
                 {recentArticles.map((article: string, index: number) => (
-                  <li key={index}><a href="#">{article}</a></li>
+                  <li key={index}><a href="/articles" role="button" tabIndex={0}>{article}</a></li>
                 ))}
               </ul>
             </div>
@@ -357,7 +362,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               <ul className="recent-comments">
                 {recentComments.map((comment: Comment, index: number) => (
                   <li key={index}>
-                    <strong>{comment.author}</strong> on <a href="#">{comment.post}</a>
+                    <strong>{comment.author}</strong> on <a href="/posts" role="button" tabIndex={0}>{comment.post}</a>
                   </li>
                 ))}
               </ul>
@@ -368,11 +373,11 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               <h3 className="sidebar-title">BEST OF THE REST</h3>
               <ul className="best-of-list">
                 {bestOfRest.map((item: string, index: number) => (
-                  <li key={index}>📰 <a href="#">{item}</a></li>
+                  <li key={index}>📰 <a href="/news" role="button" tabIndex={0}>{item}</a></li>
                 ))}
               </ul>
               <div className="login-link">
-                <a href="#">MegaphoneOz Users: Login</a>
+                <a href="/login" role="button" tabIndex={0}>MegaphoneOz Users: Login</a>
               </div>
             </div>
           </aside>

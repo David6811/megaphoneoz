@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ImageGallerySlider from '../ImageGallerySlider';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import WordPressNewsService from '../../services/wordpressNewsService';
 import './Footer.css';
 
 interface GalleryImage {
@@ -95,7 +95,10 @@ const Footer: React.FC = () => {
         // Start with fallback images
         setGalleryImages(fallbackImages);
         
-        const newsService = new WordPressNewsService();
+        // Delay footer loading by 2 seconds to avoid concurrent requests
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const newsService = WordPressNewsService.getInstance();
         const articles = await newsService.getLatestNewsForSlider(10);
         
         if (articles && articles.length > 0) {
@@ -103,18 +106,14 @@ const Footer: React.FC = () => {
             id: article.id,
             src: article.image,
             alt: article.title,
-            title: article.title.length > 20 ? article.title.substring(0, 20) + '...' : article.title,
+            title: article.title.toUpperCase(),
             date: article.date
           }));
-          
           setGalleryImages(transformedImages);
-          console.log('Successfully loaded WordPress images for footer gallery:', transformedImages.length);
-        } else {
-          console.warn('No WordPress articles found for gallery, keeping fallback images');
         }
       } catch (error) {
-        console.error('Error loading WordPress images for gallery:', error);
-        // Keep fallback images that are already set
+        console.warn('Error fetching gallery images (using fallback):', error instanceof Error ? error.message : error);
+        // Fallback images already set above, no need to do anything else
       }
     };
 
