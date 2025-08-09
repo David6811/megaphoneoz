@@ -341,6 +341,8 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                           display: 'inline-block',
                           whiteSpace: 'nowrap',
                           animation: 'professionalScroll 45s linear infinite',
+                          animationDelay: '0s',
+                          animationPlayState: 'running',
                           fontSize: '0.9rem',
                           fontWeight: 500,
                           color: '#2c3e50',
