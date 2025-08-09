@@ -94,32 +94,49 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
   // Fetch WordPress news data
   useEffect(() => {
     const fetchNewsData = async () => {
+      // Start with fallback data immediately
+      setFeaturedArticles(fallbackFeaturedArticles);
+      setNewsArticles(fallbackNewsArticles);
+      setArtsArticles(fallbackArtsArticles);
+      setLoading(false);
+      
       try {
-        // Start with fallback data immediately
-        setFeaturedArticles(fallbackFeaturedArticles);
-        setNewsArticles(fallbackNewsArticles);
-        setArtsArticles(fallbackArtsArticles);
-        setLoading(false);
-        
         const newsService = new WordPressNewsService();
         
-        // Fetch general news
-        const wpArticles = await newsService.getLatestNewsForSlider(9);
+        // Add timeout to prevent hanging
+        const fetchWithTimeout = async (promise: Promise<any>, timeoutMs: number = 8000) => {
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+          );
+          return Promise.race([promise, timeoutPromise]);
+        };
         
-        if (wpArticles && wpArticles.length > 0) {
-          const { slides, articles } = transformNewsData(wpArticles);
-          setFeaturedArticles(slides);
-          setNewsArticles(articles);
-          console.log('Successfully loaded WordPress news articles:', wpArticles.length);
-        } else {
-          console.warn('No WordPress articles found, keeping fallback data');
+        // Fetch general news with timeout
+        try {
+          const wpArticles = await fetchWithTimeout(
+            newsService.getLatestNewsForSlider(9)
+          );
+          
+          if (wpArticles && wpArticles.length > 0) {
+            const { slides, articles } = transformNewsData(wpArticles);
+            setFeaturedArticles(slides);
+            setNewsArticles(articles);
+            console.log('Successfully loaded WordPress news articles:', wpArticles.length);
+          } else {
+            console.warn('No WordPress articles found, keeping fallback data');
+          }
+        } catch (newsError) {
+          console.error('Error loading WordPress news (using fallback):', newsError);
         }
 
-        // Fetch arts and entertainment articles
+        // Fetch arts and entertainment articles with timeout
         try {
-          const artsArticles = await newsService.getLatestNewsByCategory('arts-entertainment', 4);
+          const artsArticles = await fetchWithTimeout(
+            newsService.getLatestNewsByCategory('arts-entertainment', 4)
+          );
+          
           if (artsArticles && artsArticles.length > 0) {
-            const transformedArtsArticles: Article[] = artsArticles.map(article => ({
+            const transformedArtsArticles: Article[] = artsArticles.map((article: FormattedNewsArticle) => ({
               id: article.id,
               title: article.title,
               date: article.date,
@@ -134,13 +151,11 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             console.warn('No WordPress arts articles found, keeping fallback data');
           }
         } catch (artsError) {
-          console.error('Error loading WordPress arts articles:', artsError);
-          // Keep fallback arts data
+          console.error('Error loading WordPress arts articles (using fallback):', artsError);
         }
         
       } catch (error) {
-        console.error('Error loading WordPress news:', error);
-        // Keep fallback data that's already set
+        console.error('Error loading WordPress news (using fallback):', error);
       }
     };
 
@@ -330,16 +345,6 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               </div>
             </div>
 
-            {/* Featured Video */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">JAYA BALENDRA: EXPOSED LUNA PARK GHOST TRAIN FIRE</h3>
-              <div className="video-player">
-                <div className="video-thumbnail">
-                  <img src="https://picsum.photos/300/200?random=10" alt="Video thumbnail" />
-                  <div className="play-button">▶</div>
-                </div>
-              </div>
-            </div>
 
             {/* Recent Articles */}
             <div className="sidebar-section">

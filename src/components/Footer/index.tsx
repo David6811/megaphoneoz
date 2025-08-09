@@ -103,23 +103,19 @@ const Footer: React.FC = () => {
             id: article.id,
             src: article.image,
             alt: article.title,
-            title: article.title.length > 20 ? article.title.substring(0, 20) + '...' : article.title,
+            title: article.title.toUpperCase(),
             date: article.date
           }));
-          
           setGalleryImages(transformedImages);
-          console.log('Successfully loaded WordPress images for footer gallery:', transformedImages.length);
-        } else {
-          console.warn('No WordPress articles found for gallery, keeping fallback images');
         }
       } catch (error) {
-        console.error('Error loading WordPress images for gallery:', error);
-        // Keep fallback images that are already set
+        console.warn('Error fetching gallery images (using fallback):', error instanceof Error ? error.message : error);
+        // Fallback images already set above, no need to do anything else
       }
     };
 
     fetchGalleryImages();
-  }, []);
+  }, [fallbackImages]);
 
   return (
     <footer className="footer">

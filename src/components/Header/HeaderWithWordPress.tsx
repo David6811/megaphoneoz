@@ -16,7 +16,7 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [expandedMenus, setExpandedMenus] = useState<{ [key: string]: boolean }>({});
   const [menuData, setMenuData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -67,33 +67,36 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
   // Fetch WordPress menu data on component mount
   useEffect(() => {
     const fetchMenuData = async () => {
+      // Set fallback data immediately
+      const fallbackData = {
+        navigationItems: fallbackNavigationItems,
+        newsCategories: fallbackNewsCategories,
+        lifestyleCategories: fallbackLifestyleCategories,
+        artsCategories: fallbackArtsCategories
+      };
+      
+      setMenuData(fallbackData);
+      setLoading(false);
+      
       try {
         const menuService = new WordPressMenuService();
-        const data = await menuService.getFormattedMenuData();
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        );
+        
+        const data = await Promise.race([
+          menuService.getFormattedMenuData(),
+          timeoutPromise
+        ]);
         
         if (data) {
           setMenuData(data);
           console.log('Successfully loaded WordPress menu data:', data);
-        } else {
-          console.warn('Failed to load WordPress menu data, using fallback');
-          setMenuData({
-            navigationItems: fallbackNavigationItems,
-            newsCategories: fallbackNewsCategories,
-            lifestyleCategories: fallbackLifestyleCategories,
-            artsCategories: fallbackArtsCategories
-          });
         }
       } catch (error) {
-        console.error('Error loading WordPress menu:', error);
-        // Use fallback data
-        setMenuData({
-          navigationItems: fallbackNavigationItems,
-          newsCategories: fallbackNewsCategories,
-          lifestyleCategories: fallbackLifestyleCategories,
-          artsCategories: fallbackArtsCategories
-        });
-      } finally {
-        setLoading(false);
+        console.error('Error loading WordPress menu (using fallback):', error);
+        // Keep fallback data that's already set
       }
     };
 
@@ -220,17 +223,7 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
     );
   };
 
-  // Show fallback immediately while loading
-  if (loading) {
-    // Use fallback data immediately
-    setMenuData({
-      navigationItems: fallbackNavigationItems,
-      newsCategories: fallbackNewsCategories,
-      lifestyleCategories: fallbackLifestyleCategories,
-      artsCategories: fallbackArtsCategories
-    });
-    setLoading(false);
-  }
+  // Don't set state during render - this causes infinite loops
 
   return (
     <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50 }} className={className}>
@@ -254,13 +247,13 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
               width: isMobile ? '100%' : 'auto',
               justifyContent: isMobile ? 'space-between' : 'flex-start'
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
                 <Box
                   component="img"
                   src="/cropped-Megaphone-OZ-Logo-02-2.jpg"
                   alt="MegaphoneOZ Logo"
                   sx={{
-                    height: isMobile ? '60px' : '80px',
+                    height: isMobile ? '80px' : '150px',
                     width: 'auto',
                     objectFit: 'contain'
                   }}
@@ -273,12 +266,97 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                     fontSize: '2.5rem', 
                     letterSpacing: '0.1em', 
                     margin: 0,
-                    fontFamily: '"Roboto", sans-serif'
+                    fontFamily: '"Roboto", sans-serif',
+                    minWidth: 'fit-content'
                   }}
                 >
                   <span style={{ color: theme.palette.secondary.main }}>MEGAPHONE</span>
                   <span style={{ color: theme.palette.primary.main }}>OZ</span>
                 </Typography>
+                
+                {/* Professional News Ticker */}
+                {!isMobile && (
+                  <Box sx={{ 
+                    flex: 1,
+                    ml: 4,
+                    mr: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    maxWidth: 650,
+                    minWidth: 400
+                  }}>
+                    <Box sx={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      mb: 1
+                    }}>
+                      <Box sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: '#d32f2f',
+                        mr: 1.5,
+                        animation: 'pulse 2s infinite',
+                        '@keyframes pulse': {
+                          '0%': { opacity: 1 },
+                          '50%': { opacity: 0.5 },
+                          '100%': { opacity: 1 }
+                        }
+                      }} />
+                      <Typography variant="overline" sx={{ 
+                        fontSize: '0.75rem', 
+                        fontWeight: 700,
+                        color: '#333',
+                        letterSpacing: 2,
+                        fontFamily: '"Arial", sans-serif'
+                      }}>
+                        BREAKING NEWS
+                      </Typography>
+                    </Box>
+                    <Box sx={{ 
+                      bgcolor: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                      borderRadius: 1,
+                      px: 3,
+                      py: 2, 
+                      width: '100%',
+                      height: 50,
+                      overflow: 'hidden',
+                      border: '1px solid #e1e5e9',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                      position: 'relative',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        height: '100%',
+                        width: '4px',
+                        bgcolor: '#d32f2f'
+                      }
+                    }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          display: 'inline-block',
+                          whiteSpace: 'nowrap',
+                          animation: 'professionalScroll 45s linear infinite',
+                          fontSize: '0.9rem',
+                          fontWeight: 500,
+                          color: '#2c3e50',
+                          lineHeight: '30px',
+                          fontFamily: '"Georgia", serif',
+                          '@keyframes professionalScroll': {
+                            '0%': { transform: 'translateX(100%)' },
+                            '100%': { transform: 'translateX(-100%)' }
+                          }
+                        }}
+                      >
+                        Australian Parliament passes landmark climate legislation with bipartisan support ◆ Sydney housing market shows signs of stabilization amid new policy measures ◆ Federal Reserve of Australia maintains interest rates at 4.35% following economic review ◆ Major infrastructure project announced for Melbourne-Brisbane high-speed rail corridor ◆ New trade agreement with Pacific nations expected to boost economic growth by 2.1%
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
               </Box>
               {isMobile && (
                 <IconButton

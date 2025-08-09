@@ -111,14 +111,23 @@ class WordPressNewsService {
     }
 
     try {
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
       const response = await fetch(`${this.API_BASE}/posts?per_page=${limit}&status=publish&_embed`, {
         headers: {
           'Authorization': this.AUTH_HEADER,
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
+        mode: 'cors' // Explicitly set CORS mode
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
+        console.warn(`WordPress API returned ${response.status}: ${response.statusText}`);
         throw new Error(`Failed to fetch posts: ${response.status}`);
       }
 
@@ -126,7 +135,17 @@ class WordPressNewsService {
       apiCache.set(cacheKey, result, 3); // Cache posts for 3 minutes
       return result;
     } catch (error) {
-      console.error('Error fetching WordPress posts:', error);
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          console.warn('WordPress API request timed out - using fallback data');
+        } else if (error.message.includes('Failed to fetch')) {
+          console.warn('WordPress API network error (CORS/connectivity) - using fallback data');
+        } else {
+          console.warn('WordPress API error:', error.message, '- using fallback data');
+        }
+      } else {
+        console.warn('Unknown WordPress API error - using fallback data');
+      }
       throw error;
     }
   }
@@ -247,7 +266,15 @@ class WordPressNewsService {
 
       return formattedArticles;
     } catch (error) {
-      console.error('Error getting latest news for slider:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          console.warn('WordPress API network error in getLatestNewsForSlider - components will use fallback data');
+        } else {
+          console.warn('WordPress API error in getLatestNewsForSlider:', error.message, '- components will use fallback data');
+        }
+      } else {
+        console.warn('Unknown error in getLatestNewsForSlider - components will use fallback data');
+      }
       // Return empty array on error - component will handle fallback
       return [];
     }
