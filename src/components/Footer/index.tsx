@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ImageGallerySlider from '../ImageGallerySlider';
-import WordPressNewsService from '../../services/wordpressNewsService';
+import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
 import './Footer.css';
 
 interface GalleryImage {
@@ -13,6 +13,41 @@ interface GalleryImage {
 
 const Footer: React.FC = () => {
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [popularPosts, setPopularPosts] = useState<FormattedNewsArticle[]>([]);
+
+  // Fallback popular posts
+  const fallbackPopularPosts: FormattedNewsArticle[] = [
+    {
+      id: 101,
+      title: 'FOOD REVIEW: KHANOM HOUSE DELIVERS SUBTLE SWEET INDULGENCE',
+      date: 'May 24, 2025',
+      excerpt: 'A delightful exploration of Thai desserts and their cultural significance...',
+      image: 'https://picsum.photos/id/2/100/60',
+      category: 'FOOD',
+      slug: 'khanom-house-review',
+      link: 'https://megaphoneoz.com/khanom-house-review'
+    },
+    {
+      id: 102,
+      title: 'SYDNEY THEATRE SCENE: WINTER PRODUCTIONS HEAT UP',
+      date: 'May 20, 2025',
+      excerpt: 'The best theatrical productions to catch this winter season...',
+      image: 'https://picsum.photos/id/15/100/60',
+      category: 'ARTS',
+      slug: 'sydney-theatre-winter',
+      link: 'https://megaphoneoz.com/sydney-theatre-winter'
+    },
+    {
+      id: 103,
+      title: 'LOCAL MUSIC FESTIVAL ANNOUNCES LINEUP',
+      date: 'May 18, 2025',
+      excerpt: 'Exciting new artists join the summer music festival roster...',
+      image: 'https://picsum.photos/id/1/100/60',
+      category: 'MUSIC',
+      slug: 'music-festival-lineup',
+      link: 'https://megaphoneoz.com/music-festival-lineup'
+    }
+  ];
 
   // Fallback images
   const fallbackImages: GalleryImage[] = [
@@ -88,12 +123,13 @@ const Footer: React.FC = () => {
     }
   ];
 
-  // Fetch WordPress images
+  // Fetch WordPress images and popular posts
   useEffect(() => {
-    const fetchGalleryImages = async () => {
+    const fetchData = async () => {
       try {
-        // Start with fallback images
+        // Start with fallback data
         setGalleryImages(fallbackImages);
+        setPopularPosts(fallbackPopularPosts);
         
         // Delay footer loading by 2 seconds to avoid concurrent requests
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -110,14 +146,17 @@ const Footer: React.FC = () => {
             date: article.date
           }));
           setGalleryImages(transformedImages);
+          
+          // Use first 3 articles as popular posts
+          setPopularPosts(articles.slice(0, 3));
         }
       } catch (error) {
-        console.warn('Error fetching gallery images (using fallback):', error instanceof Error ? error.message : error);
-        // Fallback images already set above, no need to do anything else
+        console.warn('Error fetching footer data (using fallback):', error instanceof Error ? error.message : error);
+        // Fallback data already set above, no need to do anything else
       }
     };
 
-    fetchGalleryImages();
+    fetchData();
   }, []);
 
   return (
@@ -140,7 +179,7 @@ const Footer: React.FC = () => {
           <h3 className="footer-title">FRENCH FILM FESTIVAL</h3>
           <div className="film-festival-image">
             <img 
-              src="https://picsum.photos/400/250?random=festival" 
+              src="https://picsum.photos/id/1/400/250" 
               alt="French Film Festival" 
             />
           </div>
@@ -171,21 +210,31 @@ const Footer: React.FC = () => {
         {/* Popular Posts Section */}
         <div className="footer-section popular-posts">
           <h3 className="footer-title">POPULAR POSTS</h3>
-          <div className="popular-post">
-            <div className="post-image">
-              <img 
-                src="https://picsum.photos/100/60?random=post1" 
-                alt="Popular post" 
-              />
-            </div>
-            <div className="post-content">
-              <h4 className="post-title">FOOD REVIEW: KHANOM HOUSE DELIVERS SUBTLE SWEET INDULGENCE</h4>
-              <div className="post-meta">
-                <span className="post-date">May 24, 2025</span>
-                <span className="post-comments">💬 3</span>
+          {popularPosts.map((post, index) => (
+            <div key={post.id} className="popular-post">
+              <div className="post-image">
+                <img 
+                  src={post.image || `https://picsum.photos/id/${index + 1}/100/60`} 
+                  alt={post.title}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = `https://picsum.photos/id/${index + 1}/100/60`;
+                  }}
+                />
+              </div>
+              <div className="post-content">
+                <h4 className="post-title">
+                  <a href={post.link} target="_blank" rel="noopener noreferrer">
+                    {post.title.length > 60 ? `${post.title.substring(0, 60)}...` : post.title}
+                  </a>
+                </h4>
+                <div className="post-meta">
+                  <span className="post-date">{post.date}</span>
+                  <span className="post-category">{post.category}</span>
+                </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
 

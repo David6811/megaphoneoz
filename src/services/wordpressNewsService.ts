@@ -147,7 +147,10 @@ class WordPressNewsService {
       try {
         // Add timeout to prevent hanging requests
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased to 10 seconds
+        const timeoutId = setTimeout(() => {
+          console.log('WordPress news request timeout after 15 seconds');
+          controller.abort();
+        }, 15000); // Increased to 15 seconds
 
         const response = await fetch(`${this.API_BASE}/posts?per_page=${limit}&status=publish&_embed`, {
           headers: {
@@ -172,14 +175,14 @@ class WordPressNewsService {
       } catch (error) {
         if (error instanceof Error) {
           if (error.name === 'AbortError') {
-            console.error('WordPress API request timed out - using fallback data');
+            console.error('WordPress API request was aborted (timeout or cancelled)');
           } else if (error.message.includes('Failed to fetch') || error.message.includes('ERR_INSUFFICIENT_RESOURCES')) {
-            console.error('WordPress API network/resource error - using fallback data');
+            console.error('WordPress API network/resource error:', error.message);
           } else {
-            console.error('WordPress API error:', error.message, '- using fallback data');
+            console.error('WordPress API error:', error.message);
           }
         } else {
-          console.error('Unknown WordPress API error - using fallback data');
+          console.error('Unknown WordPress API error:', error);
         }
         throw error;
       }
@@ -364,55 +367,87 @@ class WordPressNewsService {
   }
 
   async getLatestNewsByCategory(categorySlug: string, limit: number = 10): Promise<FormattedNewsArticle[]> {
-    try {
-      const response = await fetch(`${this.API_BASE}/posts?categories_slug=${categorySlug}&per_page=${limit}&status=publish&_embed`, {
-        headers: {
-          'Authorization': this.AUTH_HEADER,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch posts by category: ${response.status}`);
-      }
-
-      const posts = await response.json();
-      const formattedArticles: FormattedNewsArticle[] = [];
-
-      for (const post of posts) {
-        let featuredImage = '';
-        
-        // Check for embedded media first
-        const embedded = (post as any)._embedded;
-        if (embedded && embedded['wp:featuredmedia'] && embedded['wp:featuredmedia'][0]) {
-          featuredImage = this.getOptimalImageUrl(embedded['wp:featuredmedia'][0]);
-        } else if (post.featured_media) {
-          const media = await this.fetchFeaturedMedia(post.featured_media);
-          featuredImage = this.getOptimalImageUrl(media);
-        }
-
-        // Only include articles with valid WordPress images
-        if (featuredImage && featuredImage.includes('megaphoneoz.com')) {
-          const formattedArticle: FormattedNewsArticle = {
-            id: post.id,
-            title: this.stripHtmlTags(post.title.rendered),
-            date: this.formatDate(post.date),
-            excerpt: this.stripHtmlTags(post.excerpt.rendered),
-            image: featuredImage,
-            category: categorySlug.toUpperCase(),
-            slug: post.slug,
-            link: `https://megaphoneoz.com/${post.slug}`
-          };
-
-          formattedArticles.push(formattedArticle);
-        }
-      }
-
-      return formattedArticles;
-    } catch (error) {
-      console.error('Error getting news by category:', error);
-      return [];
+    const cacheKey = `category-${categorySlug}-${limit}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      console.log(`Using cached posts for category ${categorySlug}`);
+      return cached;
     }
+
+    return this.queueRequest(async () => {
+      console.log(`Making WordPress API request for category ${categorySlug}`);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log(`WordPress category request timeout after 15 seconds for ${categorySlug}`);
+          controller.abort();
+        }, 15000);
+
+        const response = await fetch(`${this.API_BASE}/posts?categories_slug=${categorySlug}&per_page=${limit}&status=publish&_embed`, {
+          headers: {
+            'Authorization': this.AUTH_HEADER,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch posts by category: ${response.status}`);
+        }
+
+        const posts = await response.json();
+        console.log(`Successfully fetched ${posts.length} posts for category ${categorySlug}`);
+        const formattedArticles: FormattedNewsArticle[] = [];
+
+        for (const post of posts) {
+          let featuredImage = '';
+          
+          // Check for embedded media first
+          const embedded = (post as any)._embedded;
+          if (embedded && embedded['wp:featuredmedia'] && embedded['wp:featuredmedia'][0]) {
+            featuredImage = this.getOptimalImageUrl(embedded['wp:featuredmedia'][0]);
+          } else if (post.featured_media) {
+            const media = await this.fetchFeaturedMedia(post.featured_media);
+            featuredImage = this.getOptimalImageUrl(media);
+          }
+
+          // Only include articles with valid WordPress images
+          if (featuredImage && featuredImage.includes('megaphoneoz.com')) {
+            const formattedArticle: FormattedNewsArticle = {
+              id: post.id,
+              title: this.stripHtmlTags(post.title.rendered),
+              date: this.formatDate(post.date),
+              excerpt: this.stripHtmlTags(post.excerpt.rendered),
+              image: featuredImage,
+              category: categorySlug.toUpperCase(),
+              slug: post.slug,
+              link: `https://megaphoneoz.com/${post.slug}`
+            };
+
+            formattedArticles.push(formattedArticle);
+          }
+        }
+
+        console.log(`Successfully processed ${formattedArticles.length} articles for category ${categorySlug}`);
+        apiCache.set(cacheKey, formattedArticles, 5); // Cache for 5 minutes
+        return formattedArticles;
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            console.error(`WordPress category request was aborted for ${categorySlug}`);
+          } else if (error.message.includes('Failed to fetch') || error.message.includes('ERR_INSUFFICIENT_RESOURCES')) {
+            console.error(`WordPress API network/resource error for ${categorySlug}:`, error.message);
+          } else {
+            console.error(`WordPress API error for ${categorySlug}:`, error.message);
+          }
+        } else {
+          console.error(`Unknown error getting news for category ${categorySlug}:`, error);
+        }
+        return [];
+      }
+    });
   }
 }
 

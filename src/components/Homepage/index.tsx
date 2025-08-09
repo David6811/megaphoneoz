@@ -128,12 +128,16 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
 
   // Fetch WordPress news data
   useEffect(() => {
+    let isCancelled = false;
+    
     const fetchNewsData = async () => {
       // Start with fallback data immediately
-      setFeaturedArticles(fallbackFeaturedArticles);
-      setNewsArticles(fallbackNewsArticles);
-      setArtsArticles(fallbackArtsArticles);
-      setLoading(false);
+      if (!isCancelled) {
+        setFeaturedArticles(fallbackFeaturedArticles);
+        setNewsArticles(fallbackNewsArticles);
+        setArtsArticles(fallbackArtsArticles);
+        setLoading(false);
+      }
       
       try {
         const newsService = WordPressNewsService.getInstance();
@@ -152,12 +156,12 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             newsService.getLatestNewsForSlider(9)
           );
           
-          if (wpArticles && wpArticles.length > 0) {
+          if (wpArticles && wpArticles.length > 0 && !isCancelled) {
             const { slides, articles } = transformNewsData(wpArticles);
             setFeaturedArticles(slides);
             setNewsArticles(articles);
             console.log('Successfully loaded WordPress news articles:', wpArticles.length);
-          } else {
+          } else if (!isCancelled) {
             console.warn('No WordPress articles found, keeping fallback data');
           }
         } catch (newsError) {
@@ -170,7 +174,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             newsService.getLatestNewsByCategory('arts-entertainment', 4)
           );
           
-          if (artsArticles && artsArticles.length > 0) {
+          if (artsArticles && artsArticles.length > 0 && !isCancelled) {
             const transformedArtsArticles: Article[] = artsArticles.map((article: FormattedNewsArticle) => ({
               id: article.id,
               title: article.title,
@@ -182,20 +186,28 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             }));
             setArtsArticles(transformedArtsArticles);
             console.log('Successfully loaded WordPress arts articles:', artsArticles.length);
-          } else {
+          } else if (!isCancelled) {
             console.warn('No WordPress arts articles found, keeping fallback data');
           }
         } catch (artsError) {
-          console.error('Error loading WordPress arts articles (using fallback):', artsError);
+          if (!isCancelled) {
+            console.error('Error loading WordPress arts articles (using fallback):', artsError);
+          }
         }
         
       } catch (error) {
-        console.error('Error loading WordPress news (using fallback):', error);
+        if (!isCancelled) {
+          console.error('Error loading WordPress news (using fallback):', error);
+        }
       }
     };
 
     fetchNewsData();
-  }, [fallbackFeaturedArticles, fallbackNewsArticles, fallbackArtsArticles]);
+    
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const recentArticles: string[] = [
     "REVIEW: HAIRSPRAY",

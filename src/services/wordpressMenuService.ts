@@ -38,9 +38,11 @@ class WordPressMenuService {
 
   async fetchMenuItems(): Promise<WordPressMenuItem[]> {
     try {
-      // Add timeout to prevent hanging requests  
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => {
+        console.log('WordPress menu request timeout after 15 seconds');
+        controller.abort();
+      }, 15000); // Increased to 15 seconds
 
       const response = await fetch(`${this.API_BASE}/menu-items`, {
         headers: {
@@ -58,7 +60,15 @@ class WordPressMenuService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error fetching WordPress menu items:', error);
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          console.error('WordPress menu request was aborted (timeout or cancelled)');
+        } else {
+          console.error('Error fetching WordPress menu items:', error.message);
+        }
+      } else {
+        console.error('Unknown error fetching WordPress menu items:', error);
+      }
       throw error;
     }
   }
