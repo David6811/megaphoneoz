@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/megaphoneoz/static/css/main.e40f0f2f.css",
-    "main.js": "/megaphoneoz/static/js/main.2b3af1a1.js",
+    "main.js": "/megaphoneoz/static/js/main.c772f8f7.js",
     "static/js/453.e51cd3cb.chunk.js": "/megaphoneoz/static/js/453.e51cd3cb.chunk.js",
     "index.html": "/megaphoneoz/index.html",
     "main.e40f0f2f.css.map": "/megaphoneoz/static/css/main.e40f0f2f.css.map",
-    "main.2b3af1a1.js.map": "/megaphoneoz/static/js/main.2b3af1a1.js.map",
+    "main.c772f8f7.js.map": "/megaphoneoz/static/js/main.c772f8f7.js.map",
     "453.e51cd3cb.chunk.js.map": "/megaphoneoz/static/js/453.e51cd3cb.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e40f0f2f.css",
-    "static/js/main.2b3af1a1.js"
+    "static/js/main.c772f8f7.js"
   ]
 }

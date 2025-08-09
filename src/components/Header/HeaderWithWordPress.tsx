@@ -101,7 +101,7 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
     };
 
     fetchMenuData();
-  }, []);
+  }, [fallbackNavigationItems, fallbackNewsCategories, fallbackLifestyleCategories, fallbackArtsCategories]);
 
   // Use WordPress data if available, otherwise fallback
   const navigationItems: NavigationItem[] = menuData?.navigationItems || fallbackNavigationItems;

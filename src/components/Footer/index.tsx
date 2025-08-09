@@ -157,7 +157,7 @@ const Footer: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [fallbackImages, fallbackPopularPosts]);
 
   return (
     <footer className="footer">

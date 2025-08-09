@@ -207,7 +207,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [fallbackFeaturedArticles, fallbackNewsArticles, fallbackArtsArticles]);
 
   const recentArticles: string[] = [
     "REVIEW: HAIRSPRAY",
