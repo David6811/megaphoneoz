@@ -11,125 +11,126 @@ interface GalleryImage {
   date?: string;
 }
 
+// Fallback data moved outside component to prevent re-renders
+const FALLBACK_POPULAR_POSTS: FormattedNewsArticle[] = [
+  {
+    id: 101,
+    title: 'FOOD REVIEW: KHANOM HOUSE DELIVERS SUBTLE SWEET INDULGENCE',
+    date: 'May 24, 2025',
+    excerpt: 'A delightful exploration of Thai desserts and their cultural significance...',
+    image: 'https://picsum.photos/id/2/100/60',
+    category: 'FOOD',
+    slug: 'khanom-house-review',
+    link: 'https://megaphoneoz.com/khanom-house-review'
+  },
+  {
+    id: 102,
+    title: 'SYDNEY THEATRE SCENE: WINTER PRODUCTIONS HEAT UP',
+    date: 'May 20, 2025',
+    excerpt: 'The best theatrical productions to catch this winter season...',
+    image: 'https://picsum.photos/id/15/100/60',
+    category: 'ARTS',
+    slug: 'sydney-theatre-winter',
+    link: 'https://megaphoneoz.com/sydney-theatre-winter'
+  },
+  {
+    id: 103,
+    title: 'LOCAL MUSIC FESTIVAL ANNOUNCES LINEUP',
+    date: 'May 18, 2025',
+    excerpt: 'Exciting new artists join the summer music festival roster...',
+    image: 'https://picsum.photos/id/1/100/60',
+    category: 'MUSIC',
+    slug: 'music-festival-lineup',
+    link: 'https://megaphoneoz.com/music-festival-lineup'
+  }
+];
+
+const FALLBACK_IMAGES: GalleryImage[] = [
+  {
+    id: 1,
+    src: "https://picsum.photos/200/150?random=1",
+    alt: "Featured Article",
+    title: "FEATURED",
+    date: "June 15, 2025"
+  },
+  {
+    id: 2,
+    src: "https://picsum.photos/200/150?random=2",
+    alt: "SU Anime Event",
+    title: "SU ANIME",
+    date: "June 15, 2025"
+  },
+  {
+    id: 3,
+    src: "https://picsum.photos/200/150?random=3",
+    alt: "Arts Review",
+    title: "ARTS REVIEW",
+    date: "June 13, 2025"
+  },
+  {
+    id: 4,
+    src: "https://picsum.photos/200/150?random=4",
+    alt: "Music Concert",
+    title: "MUSIC",
+    date: "June 1, 2025"
+  },
+  {
+    id: 5,
+    src: "https://picsum.photos/200/150?random=5",
+    alt: "Food Review",
+    title: "FOOD",
+    date: "May 25, 2025"
+  },
+  {
+    id: 6,
+    src: "https://picsum.photos/200/150?random=6",
+    alt: "Theatre Production",
+    title: "THEATRE",
+    date: "May 22, 2025"
+  },
+  {
+    id: 7,
+    src: "https://picsum.photos/200/150?random=7",
+    alt: "Cultural Event",
+    title: "CULTURE",
+    date: "May 20, 2025"
+  },
+  {
+    id: 8,
+    src: "https://picsum.photos/200/150?random=8",
+    alt: "Exhibition",
+    title: "EXHIBITION",
+    date: "May 15, 2025"
+  },
+  {
+    id: 9,
+    src: "https://picsum.photos/200/150?random=9",
+    alt: "Performance",
+    title: "PERFORMANCE",
+    date: "May 10, 2025"
+  },
+  {
+    id: 10,
+    src: "https://picsum.photos/200/150?random=10",
+    alt: "Gallery Opening",
+    title: "GALLERY",
+    date: "May 5, 2025"
+  }
+];
+
 const Footer: React.FC = () => {
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [popularPosts, setPopularPosts] = useState<FormattedNewsArticle[]>([]);
 
-  // Fallback popular posts
-  const fallbackPopularPosts: FormattedNewsArticle[] = [
-    {
-      id: 101,
-      title: 'FOOD REVIEW: KHANOM HOUSE DELIVERS SUBTLE SWEET INDULGENCE',
-      date: 'May 24, 2025',
-      excerpt: 'A delightful exploration of Thai desserts and their cultural significance...',
-      image: 'https://picsum.photos/id/2/100/60',
-      category: 'FOOD',
-      slug: 'khanom-house-review',
-      link: 'https://megaphoneoz.com/khanom-house-review'
-    },
-    {
-      id: 102,
-      title: 'SYDNEY THEATRE SCENE: WINTER PRODUCTIONS HEAT UP',
-      date: 'May 20, 2025',
-      excerpt: 'The best theatrical productions to catch this winter season...',
-      image: 'https://picsum.photos/id/15/100/60',
-      category: 'ARTS',
-      slug: 'sydney-theatre-winter',
-      link: 'https://megaphoneoz.com/sydney-theatre-winter'
-    },
-    {
-      id: 103,
-      title: 'LOCAL MUSIC FESTIVAL ANNOUNCES LINEUP',
-      date: 'May 18, 2025',
-      excerpt: 'Exciting new artists join the summer music festival roster...',
-      image: 'https://picsum.photos/id/1/100/60',
-      category: 'MUSIC',
-      slug: 'music-festival-lineup',
-      link: 'https://megaphoneoz.com/music-festival-lineup'
-    }
-  ];
-
-  // Fallback images
-  const fallbackImages: GalleryImage[] = [
-    {
-      id: 1,
-      src: "https://picsum.photos/200/150?random=1",
-      alt: "Review: Skank Sinatra",
-      title: "REVIEW: SKANK",
-      date: "June 15, 2025"
-    },
-    {
-      id: 2,
-      src: "https://picsum.photos/200/150?random=2",
-      alt: "SU Anime Society",
-      title: "SU ANIME",
-      date: "June 15, 2025"
-    },
-    {
-      id: 3,
-      src: "https://picsum.photos/200/150?random=3",
-      alt: "Arts Review",
-      title: "ARTS REVIEW",
-      date: "June 13, 2025"
-    },
-    {
-      id: 4,
-      src: "https://picsum.photos/200/150?random=4",
-      alt: "Music Concert",
-      title: "MUSIC",
-      date: "June 1, 2025"
-    },
-    {
-      id: 5,
-      src: "https://picsum.photos/200/150?random=5",
-      alt: "Theatre Review",
-      title: "THEATRE",
-      date: "May 28, 2025"
-    },
-    {
-      id: 6,
-      src: "https://picsum.photos/200/150?random=6",
-      alt: "Film Festival",
-      title: "FILM",
-      date: "May 25, 2025"
-    },
-    {
-      id: 7,
-      src: "https://picsum.photos/200/150?random=7",
-      alt: "Cultural Event",
-      title: "CULTURE",
-      date: "May 20, 2025"
-    },
-    {
-      id: 8,
-      src: "https://picsum.photos/200/150?random=8",
-      alt: "Exhibition",
-      title: "EXHIBITION",
-      date: "May 15, 2025"
-    },
-    {
-      id: 9,
-      src: "https://picsum.photos/200/150?random=9",
-      alt: "Performance",
-      title: "PERFORMANCE",
-      date: "May 10, 2025"
-    },
-    {
-      id: 10,
-      src: "https://picsum.photos/200/150?random=10",
-      alt: "Gallery Opening",
-      title: "GALLERY",
-      date: "May 5, 2025"
-    }
-  ];
+  // Fallback data now defined as constants outside component
 
   // Fetch WordPress images and popular posts
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Start with fallback data
-        setGalleryImages(fallbackImages);
-        setPopularPosts(fallbackPopularPosts);
+        setGalleryImages(FALLBACK_IMAGES);
+        setPopularPosts(FALLBACK_POPULAR_POSTS);
         
         // Delay footer loading by 2 seconds to avoid concurrent requests
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -157,7 +158,7 @@ const Footer: React.FC = () => {
     };
 
     fetchData();
-  }, [fallbackImages, fallbackPopularPosts]);
+  }, []);
 
   return (
     <footer className="footer">

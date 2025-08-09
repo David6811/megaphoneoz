@@ -8,6 +8,50 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { HeaderProps, NavigationItem, NavigationDropdownItem } from '../../types';
 import WordPressMenuService from '../../services/wordpressMenuService';
 
+// Fallback data moved outside component to prevent re-renders
+const FALLBACK_NAVIGATION_ITEMS: NavigationItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'News', href: '#', hasDropdown: true },
+  { label: 'Lifestyle', href: '#', hasDropdown: true },
+  { label: 'Arts and Entertainment', href: '#', hasDropdown: true },
+  { label: 'Opinion', href: '/opinion' },
+  { label: 'Contact Us', href: '/contact' },
+  { label: 'About Us', href: '/about-us' },
+  { label: 'Coming Up', href: '/coming-up' },
+];
+
+const FALLBACK_NEWS_CATEGORIES = [
+  { label: 'Local', href: '/news/local' },
+  { label: 'National', href: '/news/national' },
+  { label: 'World', href: '/news/world' },
+  { label: 'Features', href: '/news/features' },
+  { label: 'Environment', href: '/news/environment' },
+  { label: 'Media', href: '/news/media' },
+];
+
+const FALLBACK_LIFESTYLE_CATEGORIES = [
+  { label: 'Food and Wine', href: '/lifestyle/food-wine', hasSubmenu: true, submenu: [
+    { label: 'Restaurant Reviews', href: '/lifestyle/food-wine/restaurant-reviews' },
+    { label: 'Wine Match', href: '/lifestyle/food-wine/wine-match' },
+  ]},
+  { label: 'Sport', href: '/lifestyle/sport' },
+  { label: 'Travel', href: '/lifestyle/travel' },
+];
+
+const FALLBACK_ARTS_CATEGORIES = [
+  { label: 'Theatre', href: '/arts/theatre', hasSubmenu: true, submenu: [
+    { label: 'Reviews', href: '/arts/theatre/reviews' },
+  ]},
+  { label: 'Film', href: '/arts/film' },
+  { label: 'Music', href: '/arts/music' },
+  { label: 'Galleries', href: '/arts/galleries', hasSubmenu: true, submenu: [
+    { label: 'Exhibitions', href: '/arts/galleries/exhibitions' },
+    { label: 'Eye On The Street', href: '/arts/galleries/eye-on-the-street' },
+  ]},
+  { label: 'Books', href: '/arts/books' },
+  { label: 'Drawn and Quartered', href: '/arts/drawn-and-quartered' },
+];
+
 const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
   const [newsAnchorEl, setNewsAnchorEl] = useState<null | HTMLElement>(null);
   const [lifestyleAnchorEl, setLifestyleAnchorEl] = useState<null | HTMLElement>(null);
@@ -20,59 +64,17 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Fallback data (current hardcoded menu) in case WordPress fails
-  const fallbackNavigationItems: NavigationItem[] = [
-    { label: 'Home', href: '/' },
-    { label: 'News', href: '#', hasDropdown: true },
-    { label: 'Lifestyle', href: '#', hasDropdown: true },
-    { label: 'Arts and Entertainment', href: '#', hasDropdown: true },
-    { label: 'Opinion', href: '/opinion' },
-    { label: 'Contact Us', href: '/contact' },
-    { label: 'About Us', href: '/about-us' },
-    { label: 'Coming Up', href: '/coming-up' },
-  ];
-
-  const fallbackNewsCategories = [
-    { label: 'Local', href: '/news/local' },
-    { label: 'National', href: '/news/national' },
-    { label: 'World', href: '/news/world' },
-    { label: 'Features', href: '/news/features' },
-    { label: 'Environment', href: '/news/environment' },
-    { label: 'Media', href: '/news/media' },
-  ];
-
-  const fallbackLifestyleCategories = [
-    { label: 'Food and Wine', href: '/lifestyle/food-wine', hasSubmenu: true, submenu: [
-      { label: 'Restaurant Reviews', href: '/lifestyle/food-wine/restaurant-reviews' },
-      { label: 'Wine Match', href: '/lifestyle/food-wine/wine-match' },
-    ]},
-    { label: 'Sport', href: '/lifestyle/sport' },
-    { label: 'Travel', href: '/lifestyle/travel' },
-  ];
-
-  const fallbackArtsCategories = [
-    { label: 'Theatre', href: '/arts/theatre', hasSubmenu: true, submenu: [
-      { label: 'Reviews', href: '/arts/theatre/reviews' },
-    ]},
-    { label: 'Film', href: '/arts/film' },
-    { label: 'Music', href: '/arts/music' },
-    { label: 'Galleries', href: '/arts/galleries', hasSubmenu: true, submenu: [
-      { label: 'Exhibitions', href: '/arts/galleries/exhibitions' },
-      { label: 'Eye On The Street', href: '/arts/galleries/eye-on-the-street' },
-    ]},
-    { label: 'Books', href: '/arts/books' },
-    { label: 'Drawn and Quartered', href: '/arts/drawn-and-quartered' },
-  ];
+  // Fallback data now defined as constants outside component
 
   // Fetch WordPress menu data on component mount
   useEffect(() => {
     const fetchMenuData = async () => {
       // Set fallback data immediately
       const fallbackData = {
-        navigationItems: fallbackNavigationItems,
-        newsCategories: fallbackNewsCategories,
-        lifestyleCategories: fallbackLifestyleCategories,
-        artsCategories: fallbackArtsCategories
+        navigationItems: FALLBACK_NAVIGATION_ITEMS,
+        newsCategories: FALLBACK_NEWS_CATEGORIES,
+        lifestyleCategories: FALLBACK_LIFESTYLE_CATEGORIES,
+        artsCategories: FALLBACK_ARTS_CATEGORIES
       };
       
       setMenuData(fallbackData);
@@ -101,13 +103,13 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
     };
 
     fetchMenuData();
-  }, [fallbackNavigationItems, fallbackNewsCategories, fallbackLifestyleCategories, fallbackArtsCategories]);
+  }, []);
 
   // Use WordPress data if available, otherwise fallback
-  const navigationItems: NavigationItem[] = menuData?.navigationItems || fallbackNavigationItems;
-  const newsCategories: NavigationDropdownItem[] = menuData?.newsCategories || fallbackNewsCategories;
-  const lifestyleCategories: NavigationDropdownItem[] = menuData?.lifestyleCategories || fallbackLifestyleCategories;
-  const artsCategories: NavigationDropdownItem[] = menuData?.artsCategories || fallbackArtsCategories;
+  const navigationItems: NavigationItem[] = menuData?.navigationItems || FALLBACK_NAVIGATION_ITEMS;
+  const newsCategories: NavigationDropdownItem[] = menuData?.newsCategories || FALLBACK_NEWS_CATEGORIES;
+  const lifestyleCategories: NavigationDropdownItem[] = menuData?.lifestyleCategories || FALLBACK_LIFESTYLE_CATEGORIES;
+  const artsCategories: NavigationDropdownItem[] = menuData?.artsCategories || FALLBACK_ARTS_CATEGORIES;
 
   const handleNewsEnter = (event: React.MouseEvent<HTMLElement>) => {
     setNewsAnchorEl(event.currentTarget);

@@ -4,103 +4,105 @@ import { HomepageProps, SlideData, Article, Comment } from '../../types';
 import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
 import './Homepage.css';
 
+// Fallback data moved outside component to prevent re-renders
+const FALLBACK_FEATURED_ARTICLES: SlideData[] = [
+  {
+    id: 1,
+    title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
+    date: "June 1, 2025",
+    image: "",
+    category: "REVIEW"
+  },
+  {
+    id: 2,
+    title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH",
+    date: "May 26, 2025",
+    image: "", 
+    category: "NEWS"
+  },
+  {
+    id: 3,
+    title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES",
+    date: "October 15, 2024",
+    image: "",
+    category: "NEWS"
+  }
+];
+
+const FALLBACK_NEWS_ARTICLES: Article[] = [
+  {
+    id: 1,
+    title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION",
+    date: "May 26, 2025",
+    comments: 0,
+    image: "",
+    excerpt: "Labor's unexpected huge win on May 3 has exploded the federal coalition creating a fracture between the National and Liberal..."
+  },
+  {
+    id: 2,
+    title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES WITH ISRAEL",
+    date: "October 15, 2024",
+    comments: 0,
+    image: ""
+  },
+  {
+    id: 3,
+    title: "TAIWAN'S INDIGENOUS WONDER WOMAN RUNS IN ELECTION",
+    date: "January 12, 2024",
+    comments: 0,
+    image: ""
+  },
+  {
+    id: 4,
+    title: "LE CYGNE: HAYDN SKINNER AND HIS BELOVED CELLO",
+    date: "July 12, 2024",
+    comments: 0,
+    image: ""
+  }
+];
+
+const FALLBACK_ARTS_ARTICLES: Article[] = [
+  {
+    id: 1,
+    title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
+    date: "June 15, 2025",
+    comments: 0,
+    image: "",
+    excerpt: "It's hard to imagine Skank Sinatra (the alter persona of Jens Radda) as anything other than a glamorous, over-the-top cabaret queen..."
+  },
+  {
+    id: 2,
+    title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
+    date: "June 15, 2025",
+    comments: 1,
+    image: "",
+    excerpt: "Game lovers, cosplayers and visitors joined Sydney University Anime Society for a Wuthering Waves game-themed event celebrating its first anniversary at..."
+  },
+  {
+    id: 3,
+    title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
+    date: "June 13, 2025",
+    comments: 0,
+    image: "",
+    excerpt: "Check into another world when you book yourself into L'Hotel. It's a head-spinning mix of burlesque, cabaret and circus expertise with..."
+  },
+  {
+    id: 4,
+    title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
+    date: "June 1, 2025",
+    comments: 0,
+    image: "",
+    excerpt: "'This is Our Happy Place' declares the sign on the classroom where the school's Executive Committee (all parent volunteers, of..."
+  }
+];
+
 const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
   const [featuredArticles, setFeaturedArticles] = useState<SlideData[]>([]);
   const [newsArticles, setNewsArticles] = useState<Article[]>([]);
   const [artsArticles, setArtsArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fallback data
-  const fallbackFeaturedArticles: SlideData[] = [
-    {
-      id: 1,
-      title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
-      date: "June 1, 2025",
-      image: "",
-      category: "REVIEW"
-    },
-    {
-      id: 2,
-      title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH",
-      date: "May 26, 2025",
-      image: "", 
-      category: "NEWS"
-    },
-    {
-      id: 3,
-      title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES",
-      date: "October 15, 2024",
-      image: "",
-      category: "NEWS"
-    }
-  ];
-
-  const fallbackNewsArticles: Article[] = [
-    {
-      id: 1,
-      title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION",
-      date: "May 26, 2025",
-      comments: 0,
-      image: "",
-      excerpt: "Labor's unexpected huge win on May 3 has exploded the federal coalition creating a fracture between the National and Liberal..."
-    },
-    {
-      id: 2,
-      title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES WITH ISRAEL",
-      date: "October 15, 2024",
-      comments: 0,
-      image: ""
-    },
-    {
-      id: 3,
-      title: "TAIWAN'S INDIGENOUS WONDER WOMAN RUNS IN ELECTION",
-      date: "January 12, 2024",
-      comments: 0,
-      image: ""
-    },
-    {
-      id: 4,
-      title: "LE CYGNE: HAYDN SKINNER AND HIS BELOVED CELLO",
-      date: "July 12, 2024",
-      comments: 0,
-      image: ""
-    }
-  ];
-
-  const fallbackArtsArticles: Article[] = [
-    {
-      id: 1,
-      title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
-      date: "June 15, 2025",
-      comments: 0,
-      image: "",
-      excerpt: "It's hard to imagine Skank Sinatra (the alter persona of Jens Radda) as anything other than a glamorous, over-the-top cabaret queen..."
-    },
-    {
-      id: 2,
-      title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
-      date: "June 15, 2025",
-      comments: 1,
-      image: "",
-      excerpt: "Game lovers, cosplayers and visitors joined Sydney University Anime Society for a Wuthering Waves game-themed event celebrating its first anniversary at..."
-    },
-    {
-      id: 3,
-      title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
-      date: "June 13, 2025",
-      comments: 0,
-      image: "",
-      excerpt: "Check into another world when you book yourself into L'Hotel. It's a head-spinning mix of burlesque, cabaret and circus expertise with..."
-    },
-    {
-      id: 4,
-      title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
-      date: "June 1, 2025",
-      comments: 0,
-      image: "",
-      excerpt: "'This is Our Happy Place' declares the sign on the classroom where the school's Executive Committee (all parent volunteers, of..."
-    }
-  ];
+  // Fallback data now defined as constants outside component
 
   // Transform WordPress news data to component format
   const transformNewsData = (wpArticles: FormattedNewsArticle[]): { slides: SlideData[], articles: Article[] } => {
@@ -133,9 +135,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     const fetchNewsData = async () => {
       // Start with fallback data immediately
       if (!isCancelled) {
-        setFeaturedArticles(fallbackFeaturedArticles);
-        setNewsArticles(fallbackNewsArticles);
-        setArtsArticles(fallbackArtsArticles);
+        setFeaturedArticles(FALLBACK_FEATURED_ARTICLES);
+        setNewsArticles(FALLBACK_NEWS_ARTICLES);
+        setArtsArticles(FALLBACK_ARTS_ARTICLES);
         setLoading(false);
       }
       
@@ -207,7 +209,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     return () => {
       isCancelled = true;
     };
-  }, [fallbackFeaturedArticles, fallbackNewsArticles, fallbackArtsArticles]);
+  }, []);
 
   const recentArticles: string[] = [
     "REVIEW: HAIRSPRAY",
@@ -253,7 +255,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           <div className="top-content">
             <div className="main-column">
               <div className="featured-content">
-                <FeaturedSlider slides={fallbackFeaturedArticles} />
+                <FeaturedSlider slides={featuredArticles} />
               </div>
             </div>
           </div>
