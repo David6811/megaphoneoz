@@ -16,21 +16,21 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       id: 1,
       title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
       date: "June 1, 2025",
-      image: "https://picsum.photos/800/400?random=1",
+      image: "",
       category: "REVIEW"
     },
     {
       id: 2,
       title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH",
       date: "May 26, 2025",
-      image: "https://picsum.photos/800/400?random=2", 
+      image: "", 
       category: "NEWS"
     },
     {
       id: 3,
       title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES",
       date: "October 15, 2024",
-      image: "https://picsum.photos/800/400?random=3",
+      image: "",
       category: "NEWS"
     }
   ];
@@ -41,7 +41,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION",
       date: "May 26, 2025",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=4",
+      image: "",
       excerpt: "Labor's unexpected huge win on May 3 has exploded the federal coalition creating a fracture between the National and Liberal..."
     },
     {
@@ -49,21 +49,21 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "USYD STUDENTS DEMAND UNIVERSITY CUT TIES WITH ISRAEL",
       date: "October 15, 2024",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=5"
+      image: ""
     },
     {
       id: 3,
       title: "TAIWAN'S INDIGENOUS WONDER WOMAN RUNS IN ELECTION",
       date: "January 12, 2024",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=6"
+      image: ""
     },
     {
       id: 4,
       title: "LE CYGNE: HAYDN SKINNER AND HIS BELOVED CELLO",
       date: "July 12, 2024",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=7"
+      image: ""
     }
   ];
 
@@ -101,7 +101,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       setLoading(false);
       
       try {
-        const newsService = new WordPressNewsService();
+        const newsService = WordPressNewsService.getInstance();
         
         // Add timeout to prevent hanging
         const fetchWithTimeout = async (promise: Promise<any>, timeoutMs: number = 8000) => {
@@ -168,7 +168,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
       date: "June 15, 2025",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=4",
+      image: "",
       excerpt: "It's hard to imagine Skank Sinatra (the alter persona of Jens Radda) as anything other than a glamorous, over-the-top cabaret queen..."
     },
     {
@@ -176,7 +176,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
       date: "June 15, 2025",
       comments: 1,
-      image: "https://picsum.photos/400/250?random=4",
+      image: "",
       excerpt: "Game lovers, cosplayers and visitors joined Sydney University Anime Society for a Wuthering Waves game-themed event celebrating its first anniversary at..."
     },
     {
@@ -184,7 +184,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
       date: "June 13, 2025",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=4",
+      image: "",
       excerpt: "Check into another world when you book yourself into L'Hotel. It's a head-spinning mix of burlesque, cabaret and circus expertise with..."
     },
     {
@@ -192,7 +192,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
       date: "June 1, 2025",
       comments: 0,
-      image: "https://picsum.photos/400/250?random=4",
+      image: "",
       excerpt: "'This is Our Happy Place' declares the sign on the classroom where the school's Executive Committee (all parent volunteers, of..."
     }
   ];

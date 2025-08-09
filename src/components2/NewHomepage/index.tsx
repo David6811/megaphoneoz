@@ -304,7 +304,7 @@ const NewHomepage: React.FC<HomepageProps> = () => {
         setArtsArticles(fallbackArtsArticles);
         setLoading(false);
         
-        const newsService = new WordPressNewsService();
+        const newsService = WordPressNewsService.getInstance();
         
         const wpArticles = await newsService.getLatestNewsForSlider(12);
         if (wpArticles && wpArticles.length > 0) {

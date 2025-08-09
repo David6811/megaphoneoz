@@ -95,7 +95,10 @@ const Footer: React.FC = () => {
         // Start with fallback images
         setGalleryImages(fallbackImages);
         
-        const newsService = new WordPressNewsService();
+        // Delay footer loading by 2 seconds to avoid concurrent requests
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const newsService = WordPressNewsService.getInstance();
         const articles = await newsService.getLatestNewsForSlider(10);
         
         if (articles && articles.length > 0) {

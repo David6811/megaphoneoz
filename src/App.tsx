@@ -10,6 +10,7 @@ import AboutUs from './components/AboutUs';
 import ContactUs from './components/ContactUs';
 import Footer from './components/Footer';
 import Homepage from './components/Homepage';
+import TestPage from './components/Test';
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,9 @@ const App: React.FC = () => {
         <Routes>
           {/* 新的独立新闻网站 - 作为主页 */}
           <Route path="/" element={<NewsSite />} />
+          
+          {/* Test Page */}
+          <Route path="/test" element={<TestPage />} />
           
           {/* 原有MegaphoneOz网站路由 - 移至/news */}
           <Route 
