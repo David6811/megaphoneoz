@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Card, CardMedia, CardContent, Pagination, Button } from '@mui/material';
+import { Box, Container, Typography, Card, CardMedia, CardContent, Pagination, Button, Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useLocation, useNavigate } from 'react-router-dom';
 import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
 import { Article, Comment } from '../../types';
 
@@ -27,8 +28,8 @@ const ArticleTitle = styled(Typography)(({ theme }) => ({
   lineHeight: 1.3,
   marginBottom: theme.spacing(1),
   display: '-webkit-box',
-  '-webkit-line-clamp': 3,
-  '-webkit-box-orient': 'vertical',
+  WebkitLineClamp: 3,
+  WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
 }));
 
@@ -36,8 +37,8 @@ const ArticleExcerpt = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.secondary,
   marginBottom: theme.spacing(2),
   display: '-webkit-box',
-  '-webkit-line-clamp': 3,
-  '-webkit-box-orient': 'vertical',
+  WebkitLineClamp: 3,
+  WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
 }));
 
@@ -125,15 +126,122 @@ const RecentList = styled('ul')(({ theme }) => ({
   },
 }));
 
+// Loading skeleton component
+const ArticleSkeleton: React.FC = () => (
+  <StyledCard>
+    <Skeleton variant="rectangular" height={200} />
+    <CardContent>
+      <Skeleton variant="text" height={32} width="90%" />
+      <Skeleton variant="text" height={20} width="100%" />
+      <Skeleton variant="text" height={20} width="80%" />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+        <Skeleton variant="text" width={100} />
+        <Skeleton variant="text" width={60} />
+      </Box>
+      <Skeleton variant="rectangular" height={36} width={120} sx={{ mt: 2 }} />
+    </CardContent>
+  </StyledCard>
+);
+
+// Empty state component
+const EmptyState: React.FC<{ category: string }> = ({ category }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      py: 8,
+      textAlign: 'center',
+      color: 'text.secondary'
+    }}
+  >
+    <Typography variant="h5" gutterBottom>
+      📰
+    </Typography>
+    <Typography variant="h6" gutterBottom>
+      No articles found
+    </Typography>
+    <Typography variant="body2">
+      There are currently no articles available in {category}.
+    </Typography>
+  </Box>
+);
+
 interface LocalNewsProps {
   className?: string;
 }
 
 const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [categoryTitle, setCategoryTitle] = useState('NEWS ARCHIVE');
+  const location = useLocation();
+  const navigate = useNavigate();
   const articlesPerPage = 12;
+
+  // WordPress category ID mapping based on actual WordPress categories API (Total: 35 categories)
+  const getCategoryIdFromPath = (path: string): { categoryId: number | null, title: string } => {
+    const pathMappings: { [key: string]: { categoryId: number, title: string } } = {
+      // News categories (Parent: News ID: 3)
+      '/category/news/localnews': { categoryId: 4, title: 'LOCAL NEWS' },
+      '/category/news/nationalnews': { categoryId: 5, title: 'NATIONAL NEWS' },
+      '/category/news/worldnews': { categoryId: 6, title: 'WORLD NEWS' },
+      '/category/news/featurednews/': { categoryId: 7, title: 'FEATURES' },
+      '/category/news/environment': { categoryId: 16, title: 'ENVIRONMENT' },
+      '/category/media/': { categoryId: 17, title: 'MEDIA' },
+      
+      // Lifestyle categories (Parent: Lifestyle ID: 29)
+      '/category/lifestyle/sport/': { categoryId: 18, title: 'SPORT' },
+      '/category/lifestyle/travel/': { categoryId: 31, title: 'TRAVEL' },
+      '/category/lifestyle/foodwine/restaurantreviews': { categoryId: 20, title: 'RESTAURANT REVIEWS' },
+      '/category/lifestyle/foodwine/winematch/': { categoryId: 21, title: 'WINE MATCH' },
+      
+      // Arts & Entertainment categories (Parent: Arts and Entertainment ID: 9)
+      '/category/artsentertainment/theatre/theatrereviews/': { categoryId: 32, title: 'THEATRE REVIEWS' },
+      '/category/artsentertainment/filmreviews/': { categoryId: 11, title: 'FILM REVIEWS' },
+      '/category/artsentertainment/galleries/exhibitions/': { categoryId: 14, title: 'GALLERY EXHIBITIONS' },
+      '/category/artsentertainment/galleries/eyeonthestreet/': { categoryId: 15, title: 'EYE ON THE STREET' },
+      '/category/artsentertainment/books/': { categoryId: 30, title: 'BOOKS' },
+      '/category/artsentertainment/videogames/': { categoryId: 125, title: 'VIDEO GAMES' },
+      '/category/artsentertainment/games/': { categoryId: 1696, title: 'GAMES' },
+      
+      // Other main categories
+      '/category/opinion/': { categoryId: 8, title: 'OPINION' },
+      '/category/trending/': { categoryId: 60, title: 'TRENDING' },
+      '/category/front-page/': { categoryId: 47, title: 'FRONT PAGE' },
+      '/coming-up': { categoryId: 1258, title: 'COMING UP' }
+    };
+
+    // Try exact match first
+    let mapping = pathMappings[path];
+    if (mapping) {
+      return mapping;
+    }
+
+    // Try without trailing slash
+    const pathWithoutSlash = path.endsWith('/') ? path.slice(0, -1) : path;
+    mapping = pathMappings[pathWithoutSlash];
+    if (mapping) {
+      return mapping;
+    }
+
+    // Try with trailing slash
+    const pathWithSlash = path.endsWith('/') ? path : path + '/';
+    mapping = pathMappings[pathWithSlash];
+    if (mapping) {
+      return mapping;
+    }
+
+    // Fallback for non-category paths
+    if (path.includes('/opinion')) {
+      return { categoryId: null, title: 'OPINION' };
+    }
+    
+    return { categoryId: null, title: 'NEWS ARCHIVE' };
+  };
 
   // Fallback data for local news
   const fallbackArticles: Article[] = [
@@ -235,20 +343,41 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
       image: article.image,
       excerpt: article.excerpt,
       comments: 0, // WordPress doesn't provide comment count in this endpoint
-      category: article.category || 'Local'
+      category: article.category || 'Local',
+      content: article.content,
+      author: article.author
     }));
   };
 
-  // Fetch WordPress news data for local category
+  // Fetch WordPress news data based on current URL
   useEffect(() => {
     let isCancelled = false;
     
-    const fetchLocalNews = async () => {
-      // Start with fallback data immediately
-      if (!isCancelled) {
-        setArticles(fallbackArticles);
-        setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
+    const fetchCategoryNews = async () => {
+      const { categoryId, title } = getCategoryIdFromPath(location.pathname);
+      
+      // Update page title based on URL
+      setCategoryTitle(title);
+      
+      // Log the mapping for debugging
+      console.log('LocalNews: URL mapping result:', { 
+        pathname: location.pathname, 
+        categoryId, 
+        title 
+      });
+      
+      // Only fetch from WordPress if we have a category ID
+      if (!categoryId) {
+        console.log('No category ID found for path:', location.pathname);
+        console.log('getCategoryIdFromPath function returned:', { categoryId, title });
+        setLoading(false);
+        setArticles([]);
+        return;
       }
+      
+      // Set loading state while fetching
+      setLoading(true);
+      setArticles([]);
       
       try {
         const newsService = WordPressNewsService.getInstance();
@@ -261,41 +390,67 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
           return Promise.race([promise, timeoutPromise]);
         };
         
-        // Fetch local news with timeout
+        // Fetch category news with timeout
         try {
+          console.log(`Fetching articles for category ID: ${categoryId}, title: ${title}, path: ${location.pathname}`);
           const wpArticles = await fetchWithTimeout(
-            newsService.getLatestNewsByCategory('local', 20)
+            newsService.getLatestNewsByCategoryId(categoryId, 5)
           );
           
-          if (wpArticles && wpArticles.length > 0 && !isCancelled) {
-            const transformedArticles = transformNewsData(wpArticles);
-            setArticles(transformedArticles);
-            setTotalPages(Math.ceil(transformedArticles.length / articlesPerPage));
-            console.log('Successfully loaded WordPress local news articles:', wpArticles.length);
-          } else if (!isCancelled) {
-            console.warn('No WordPress local news found, keeping fallback data');
+          console.log('WordPress API response:', wpArticles);
+          if (!isCancelled) {
+            if (wpArticles && wpArticles.length > 0) {
+              const transformedArticles = transformNewsData(wpArticles);
+              console.log('Transformed articles:', transformedArticles);
+              setArticles(transformedArticles);
+              setTotalPages(Math.ceil(transformedArticles.length / articlesPerPage));
+              console.log(`Successfully loaded ${wpArticles.length} WordPress articles for ${title}`);
+            } else {
+              console.warn(`No WordPress articles found for ${title}, received:`, wpArticles);
+              setArticles([]);
+              setTotalPages(1);
+            }
+            setLoading(false);
           }
         } catch (newsError) {
-          console.error('Error loading WordPress local news (using fallback):', newsError);
+          if (!isCancelled) {
+            console.error(`Error loading WordPress articles for ${title}:`, newsError);
+            setArticles(fallbackArticles); // Only use fallback on error
+            setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
+            setLoading(false);
+          }
         }
         
       } catch (error) {
         if (!isCancelled) {
-          console.error('Error loading WordPress local news (using fallback):', error);
+          console.error(`Error loading WordPress articles for ${title}:`, error);
+          setArticles(fallbackArticles); // Only use fallback on error
+          setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
+          setLoading(false);
         }
       }
     };
 
-    fetchLocalNews();
+    fetchCategoryNews();
     
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [location.pathname]);
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleArticleClick = (article: Article) => {
+    // Pass the full article data via state instead of just slug
+    navigate(`/article/${article.id}`, { 
+      state: { 
+        article: article,
+        categoryTitle: categoryTitle
+      } 
+    });
   };
 
   // Calculate articles for current page
@@ -323,10 +478,10 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
                   pb: 1
                 }}
               >
-                LOCAL NEWS ARCHIVE
+                {categoryTitle}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Stay informed with the latest news from your local community
+                Stay informed with the latest news and updates
               </Typography>
             </Box>
 
@@ -337,43 +492,57 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
               gap: 3,
               mb: 4 
             }}>
-              {currentArticles.map((article) => (
-                <Box key={article.id}>
-                  <StyledCard>
-                    {article.image && (
-                      <StyledCardMedia
-                        image={article.image}
-                        title={article.title}
-                      />
-                    )}
-                    <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                      <ArticleTitle variant="h6">
-                        {article.title}
-                      </ArticleTitle>
-                      {article.excerpt && (
-                        <ArticleExcerpt variant="body2">
-                          {article.excerpt}
-                        </ArticleExcerpt>
+              {loading ? (
+                // Show loading skeletons
+                Array.from({ length: 6 }).map((_, index) => (
+                  <ArticleSkeleton key={`skeleton-${index}`} />
+                ))
+              ) : currentArticles.length > 0 ? (
+                // Show actual articles
+                currentArticles.map((article) => (
+                  <Box key={article.id}>
+                    <StyledCard>
+                      {article.image && (
+                        <StyledCardMedia
+                          image={article.image}
+                          title={article.title}
+                        />
                       )}
-                      <ArticleMeta>
-                        <Typography variant="caption" color="text.secondary">
-                          {article.date}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          💬 {article.comments}
-                        </Typography>
-                      </ArticleMeta>
-                      <Button 
-                        variant="outlined" 
-                        size="small" 
-                        sx={{ mt: 2, alignSelf: 'flex-start' }}
-                      >
-                        Continue reading
-                      </Button>
-                    </CardContent>
-                  </StyledCard>
+                      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                        <ArticleTitle variant="h6">
+                          {article.title}
+                        </ArticleTitle>
+                        {article.excerpt && (
+                          <ArticleExcerpt variant="body2">
+                            {article.excerpt}
+                          </ArticleExcerpt>
+                        )}
+                        <ArticleMeta>
+                          <Typography variant="caption" color="text.secondary">
+                            {article.date}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            💬 {article.comments}
+                          </Typography>
+                        </ArticleMeta>
+                        <Button 
+                          variant="outlined" 
+                          size="small" 
+                          sx={{ mt: 2, alignSelf: 'flex-start' }}
+                          onClick={() => handleArticleClick(article)}
+                        >
+                          Continue reading
+                        </Button>
+                      </CardContent>
+                    </StyledCard>
+                  </Box>
+                ))
+              ) : (
+                // Show empty state
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                  <EmptyState category={categoryTitle.toLowerCase()} />
                 </Box>
-              ))}
+              )}
             </Box>
 
             {/* Pagination */}
@@ -455,7 +624,8 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
               <RecentList>
                 {bestOfRest.map((item, index) => (
                   <li key={index}>
-                    📰 <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{item}</Box>
+                    <Box component="img" src="https://megaphoneoz.com/wp-content/uploads/2015/05/MegaphoneGravatar.jpg" alt="Megaphone Icon" sx={{ width: 16, height: 16, mr: 1, verticalAlign: 'middle' }} />
+                    <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{item}</Box>
                   </li>
                 ))}
               </RecentList>

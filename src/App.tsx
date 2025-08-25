@@ -10,6 +10,7 @@ import ContactUs from './components/ContactUs';
 import Footer from './components/Footer';
 import Homepage from './components/Homepage';
 import LocalNews from './components/LocalNews';
+import ArticleDetail from './components/ArticleDetail';
 
 const App: React.FC = () => {
   return (
@@ -71,6 +72,9 @@ const App: React.FC = () => {
             
             {/* Additional routes */}
             <Route path="/coming-up" element={<LocalNews />} />
+            
+            {/* Article Detail Route */}
+            <Route path="/article/:id" element={<ArticleDetail />} />
           </Routes>
           <Footer />
         </div>

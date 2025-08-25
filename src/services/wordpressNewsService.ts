@@ -81,6 +81,20 @@ interface WordPressCategory {
   parent: number;
 }
 
+interface WordPressAuthor {
+  id: number;
+  name: string;
+  url: string;
+  description: string;
+  link: string;
+  slug: string;
+  avatar_urls: {
+    24: string;
+    48: string;
+    96: string;
+  };
+}
+
 interface FormattedNewsArticle {
   id: number;
   title: string;
@@ -90,6 +104,8 @@ interface FormattedNewsArticle {
   category: string;
   slug: string;
   link: string;
+  content?: string;
+  author?: WordPressAuthor;
 }
 
 class WordPressNewsService {
@@ -329,6 +345,25 @@ class WordPressNewsService {
           }
         }
 
+        // Get author from embedded data
+        let authorInfo: WordPressAuthor | undefined;
+        if (embedded && embedded.author && embedded.author[0]) {
+          const author = embedded.author[0];
+          authorInfo = {
+            id: author.id,
+            name: author.name,
+            url: author.url,
+            description: author.description,
+            link: author.link,
+            slug: author.slug,
+            avatar_urls: author.avatar_urls || {
+              24: 'https://secure.gravatar.com/avatar/?s=24&d=mm&r=g',
+              48: 'https://secure.gravatar.com/avatar/?s=48&d=mm&r=g',
+              96: 'https://secure.gravatar.com/avatar/?s=96&d=mm&r=g'
+            }
+          };
+        }
+
         // Only include articles with valid images (WordPress images only)
         if (featuredImage && featuredImage.includes('megaphoneoz.com')) {
           const formattedArticle: FormattedNewsArticle = {
@@ -339,7 +374,9 @@ class WordPressNewsService {
             image: featuredImage,
             category: categoryName,
             slug: post.slug,
-            link: `https://megaphoneoz.com/${post.slug}`
+            link: `https://megaphoneoz.com/${post.slug}`,
+            content: post.content.rendered,
+            author: authorInfo
           };
 
           formattedArticles.push(formattedArticle);
@@ -364,6 +401,245 @@ class WordPressNewsService {
       // Return empty array on error - component will handle fallback
       return [];
     }
+  }
+
+  async getLatestNewsByCategoryId(categoryId: number, limit: number = 10): Promise<FormattedNewsArticle[]> {
+    const cacheKey = `category-id-${categoryId}-${limit}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      console.log(`Using cached posts for category ID ${categoryId}`);
+      return cached;
+    }
+
+    return this.queueRequest(async () => {
+      console.log(`Making WordPress API request for category ID ${categoryId}`);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log(`WordPress category request timeout after 15 seconds for category ID ${categoryId}`);
+          controller.abort();
+        }, 15000);
+
+        const url = `${this.API_BASE}/posts?categories=${categoryId}&per_page=${limit}&status=publish&_embed`;
+        console.log(`Full API URL: ${url}`);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': this.AUTH_HEADER,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+          mode: 'cors'
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch posts by category ID: ${response.status}`);
+        }
+
+        const posts = await response.json();
+        console.log(`Successfully fetched ${posts.length} posts for category ID ${categoryId}`);
+        console.log('Raw posts data:', posts);
+        const formattedArticles: FormattedNewsArticle[] = [];
+
+        for (const post of posts) {
+          let featuredImage = '';
+          let categoryName = 'NEWS';
+          
+          // Check for embedded media first
+          const embedded = (post as any)._embedded;
+          if (embedded && embedded['wp:featuredmedia'] && embedded['wp:featuredmedia'][0]) {
+            featuredImage = this.getOptimalImageUrl(embedded['wp:featuredmedia'][0]);
+          } else if (post.featured_media) {
+            const media = await this.fetchFeaturedMedia(post.featured_media);
+            featuredImage = this.getOptimalImageUrl(media);
+          }
+
+          // Get category name from embedded data
+          if (embedded && embedded['wp:term'] && embedded['wp:term'][0]) {
+            const categories = embedded['wp:term'][0];
+            if (categories && categories.length > 0) {
+              categoryName = categories[0].name.toUpperCase();
+            }
+          }
+
+          // Get author from embedded data
+          let authorInfo: WordPressAuthor | undefined;
+          if (embedded && embedded.author && embedded.author[0]) {
+            const author = embedded.author[0];
+            authorInfo = {
+              id: author.id,
+              name: author.name,
+              url: author.url,
+              description: author.description,
+              link: author.link,
+              slug: author.slug,
+              avatar_urls: author.avatar_urls || {
+                24: 'https://secure.gravatar.com/avatar/?s=24&d=mm&r=g',
+                48: 'https://secure.gravatar.com/avatar/?s=48&d=mm&r=g',
+                96: 'https://secure.gravatar.com/avatar/?s=96&d=mm&r=g'
+              }
+            };
+          }
+
+          // Include all articles (with or without images for debugging)
+          // Only filter out if image exists but is from wrong domain
+          if (!featuredImage || featuredImage.includes('megaphoneoz.com')) {
+            const formattedArticle: FormattedNewsArticle = {
+              id: post.id,
+              title: this.stripHtmlTags(post.title.rendered),
+              date: this.formatDate(post.date),
+              excerpt: this.stripHtmlTags(post.excerpt.rendered),
+              image: featuredImage,
+              category: categoryName,
+              slug: post.slug,
+              link: `https://megaphoneoz.com/${post.slug}`,
+              content: post.content.rendered,
+              author: authorInfo
+            };
+
+            console.log(`Added article: "${formattedArticle.title}" with image: ${featuredImage || 'no image'}`);
+            formattedArticles.push(formattedArticle);
+          }
+        }
+
+        console.log(`Successfully processed ${formattedArticles.length} articles for category ID ${categoryId}`);
+        apiCache.set(cacheKey, formattedArticles, 5); // Cache for 5 minutes
+        return formattedArticles;
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            console.error(`WordPress category request was aborted for category ID ${categoryId}`);
+          } else if (error.message.includes('Failed to fetch') || error.message.includes('ERR_INSUFFICIENT_RESOURCES')) {
+            console.error(`WordPress API network/resource error for category ID ${categoryId}:`, error.message);
+          } else {
+            console.error(`WordPress API error for category ID ${categoryId}:`, error.message);
+          }
+        } else {
+          console.error(`Unknown error getting news for category ID ${categoryId}:`, error);
+        }
+        return [];
+      }
+    });
+  }
+
+  async getPostById(postId: number): Promise<FormattedNewsArticle | null> {
+    const cacheKey = `post-${postId}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      console.log(`Using cached post for ID ${postId}`);
+      return cached;
+    }
+
+    return this.queueRequest(async () => {
+      console.log(`Making WordPress API request for post ID ${postId}`);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log(`WordPress post request timeout after 15 seconds for post ID ${postId}`);
+          controller.abort();
+        }, 15000);
+
+        const url = `${this.API_BASE}/posts/${postId}?_embed`;
+        console.log(`Full API URL: ${url}`);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': this.AUTH_HEADER,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+          mode: 'cors'
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.warn(`Post ${postId} not found`);
+            return null;
+          }
+          throw new Error(`Failed to fetch post by ID: ${response.status}`);
+        }
+
+        const post = await response.json();
+        console.log(`Successfully fetched post ${postId}:`, post.title.rendered);
+        
+        // Process the single post
+        let featuredImage = '';
+        let categoryName = 'NEWS';
+        let authorInfo: WordPressAuthor | undefined;
+        
+        // Check for embedded data
+        const embedded = (post as any)._embedded;
+        
+        // Get featured image
+        if (embedded && embedded['wp:featuredmedia'] && embedded['wp:featuredmedia'][0]) {
+          featuredImage = this.getOptimalImageUrl(embedded['wp:featuredmedia'][0]);
+        } else if (post.featured_media) {
+          const media = await this.fetchFeaturedMedia(post.featured_media);
+          featuredImage = this.getOptimalImageUrl(media);
+        }
+
+        // Get category name
+        if (embedded && embedded['wp:term'] && embedded['wp:term'][0]) {
+          const categories = embedded['wp:term'][0];
+          if (categories && categories.length > 0) {
+            categoryName = categories[0].name.toUpperCase();
+          }
+        }
+
+        // Get author from embedded data
+        if (embedded && embedded.author && embedded.author[0]) {
+          const author = embedded.author[0];
+          authorInfo = {
+            id: author.id,
+            name: author.name,
+            url: author.url,
+            description: author.description,
+            link: author.link,
+            slug: author.slug,
+            avatar_urls: author.avatar_urls || {
+              24: 'https://secure.gravatar.com/avatar/?s=24&d=mm&r=g',
+              48: 'https://secure.gravatar.com/avatar/?s=48&d=mm&r=g',
+              96: 'https://secure.gravatar.com/avatar/?s=96&d=mm&r=g'
+            }
+          };
+          console.log('Found author data:', authorInfo);
+        }
+
+        const formattedArticle: FormattedNewsArticle = {
+          id: post.id,
+          title: this.stripHtmlTags(post.title.rendered),
+          date: this.formatDate(post.date),
+          excerpt: this.stripHtmlTags(post.excerpt.rendered),
+          image: featuredImage,
+          category: categoryName,
+          slug: post.slug,
+          link: `https://megaphoneoz.com/${post.slug}`,
+          content: post.content.rendered, // Full HTML content
+          author: authorInfo
+        };
+
+        console.log(`Successfully processed post ${postId}:`, formattedArticle);
+        apiCache.set(cacheKey, formattedArticle, 10); // Cache for 10 minutes
+        return formattedArticle;
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            console.error(`WordPress post request was aborted for post ID ${postId}`);
+          } else if (error.message.includes('Failed to fetch') || error.message.includes('ERR_INSUFFICIENT_RESOURCES')) {
+            console.error(`WordPress API network/resource error for post ID ${postId}:`, error.message);
+          } else {
+            console.error(`WordPress API error for post ID ${postId}:`, error.message);
+          }
+        } else {
+          console.error(`Unknown error getting post ${postId}:`, error);
+        }
+        return null;
+      }
+    });
   }
 
   async getLatestNewsByCategory(categorySlug: string, limit: number = 10): Promise<FormattedNewsArticle[]> {
@@ -413,8 +689,9 @@ class WordPressNewsService {
             featuredImage = this.getOptimalImageUrl(media);
           }
 
-          // Only include articles with valid WordPress images
-          if (featuredImage && featuredImage.includes('megaphoneoz.com')) {
+          // Include all articles (with or without images for debugging)
+          // Only filter out if image exists but is from wrong domain
+          if (!featuredImage || featuredImage.includes('megaphoneoz.com')) {
             const formattedArticle: FormattedNewsArticle = {
               id: post.id,
               title: this.stripHtmlTags(post.title.rendered),
@@ -452,4 +729,4 @@ class WordPressNewsService {
 }
 
 export default WordPressNewsService;
-export type { FormattedNewsArticle, WordPressPost, WordPressMedia };
+export type { FormattedNewsArticle, WordPressPost, WordPressMedia, WordPressAuthor };

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FeaturedSlider from '../FeaturedSlider';
 import { HomepageProps, SlideData, Article, Comment } from '../../types';
 import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
 import './Homepage.css';
 
 const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
+  const navigate = useNavigate();
   const [featuredArticles, setFeaturedArticles] = useState<SlideData[]>([]);
   const [newsArticles, setNewsArticles] = useState<Article[]>([]);
   const [artsArticles, setArtsArticles] = useState<Article[]>([]);
@@ -120,7 +122,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       image: article.image,
       excerpt: article.excerpt,
       comments: 0, // WordPress doesn't provide comment count in this endpoint
-      category: article.category
+      category: article.category,
+      content: article.content,
+      author: article.author
     }));
 
     return { slides, articles };
@@ -182,7 +186,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               image: article.image,
               excerpt: article.excerpt,
               comments: 0,
-              category: article.category
+              category: article.category,
+              content: article.content,
+              author: article.author
             }));
             setArtsArticles(transformedArtsArticles);
             console.log('Successfully loaded WordPress arts articles:', artsArticles.length);
@@ -244,6 +250,16 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     "Arctic sea ice melts"
   ];
 
+  const handleArticleClick = (article: Article) => {
+    // Pass the full article data via state instead of just slug
+    navigate(`/article/${article.id}`, { 
+      state: { 
+        article: article,
+        categoryTitle: article.category || 'NEWS'
+      } 
+    });
+  };
+
   // Initialize with fallback data immediately
   if (loading) {
     // Show content immediately with fallback data
@@ -283,7 +299,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
                     <img src={newsArticles[0].image} alt={newsArticles[0].title} />
                   </div>
                   <div className="article-content">
-                    <h3 className="article-title">{newsArticles[0].title}</h3>
+                    <h3 className="article-title" onClick={() => handleArticleClick(newsArticles[0])} style={{ cursor: 'pointer' }}>{newsArticles[0].title}</h3>
                     {newsArticles[0].excerpt && <p className="article-excerpt">{newsArticles[0].excerpt}</p>}
                     <div className="article-meta">
                       <span className="article-date">{newsArticles[0].date}</span>
@@ -300,7 +316,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
                         <img src={article.image} alt={article.title} />
                       </div>
                       <div className="article-content">
-                        <h3 className="article-title">{article.title}</h3>
+                        <h3 className="article-title" onClick={() => handleArticleClick(article)} style={{ cursor: 'pointer' }}>{article.title}</h3>
                         <div className="article-meta">
                           <span className="article-date">{article.date}</span>
                           <span className="article-comments">💬 {article.comments}</span>
@@ -322,7 +338,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
                       <img src={article.image} alt={article.title} />
                     </div>
                     <div className="article-content">
-                      <h3 className="article-title">{article.title}</h3>
+                      <h3 className="article-title" onClick={() => handleArticleClick(article)} style={{ cursor: 'pointer' }}>{article.title}</h3>
                       {article.excerpt && <p className="article-excerpt">{article.excerpt}</p>}
                       <div className="article-meta">
                         <span className="article-date">{article.date}</span>
@@ -385,12 +401,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               <h3 className="sidebar-title">BEST OF THE REST</h3>
               <ul className="best-of-list">
                 {bestOfRest.map((item: string, index: number) => (
-                  <li key={index}>📰 <a href="/news" role="button" tabIndex={0}>{item}</a></li>
+                  <li key={index} style={{ display: 'flex', alignItems: 'center' }}><img src="https://megaphoneoz.com/wp-content/uploads/2015/05/MegaphoneGravatar.jpg" alt="Megaphone Icon" style={{ width: 16, height: 16, marginRight: 8 }} /><a href="/news" role="button" tabIndex={0}>{item}</a></li>
                 ))}
               </ul>
-              <div className="login-link">
-                <a href="/login" role="button" tabIndex={0}>MegaphoneOz Users: Login</a>
-              </div>
             </div>
           </aside>
         </div>

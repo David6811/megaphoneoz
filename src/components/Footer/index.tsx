@@ -197,14 +197,6 @@ const Footer: React.FC = () => {
             <button className="newsletter-btn">SUBSCRIBE</button>
           </div>
           
-          {/* Social Media Icons */}
-          <div className="social-media-row">
-            <a href="https://facebook.com/megaphoneoz" className="social-icon facebook">f</a>
-            <a href="https://flickr.com/megaphoneoz" className="social-icon flickr">flickr</a>
-            <a href="https://instagram.com/megaphoneoz" className="social-icon instagram">📷</a>
-            <a href="https://twitter.com/megaphoneoz" className="social-icon twitter">🐦</a>
-            <a href="https://youtube.com/megaphoneoz" className="social-icon youtube">▶</a>
-          </div>
         </div>
 
         {/* Popular Posts Section */}

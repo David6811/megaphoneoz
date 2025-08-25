@@ -1,3 +1,18 @@
+// WordPress Author Type
+export interface WordPressAuthor {
+  id: number;
+  name: string;
+  url: string;
+  description: string;
+  link: string;
+  slug: string;
+  avatar_urls: {
+    24: string;
+    48: string;
+    96: string;
+  };
+}
+
 // Article and News Types
 export interface Article {
   id: number;
@@ -7,6 +22,8 @@ export interface Article {
   excerpt?: string;
   comments?: number;
   category?: string;
+  content?: string;
+  author?: WordPressAuthor;
 }
 
 // Featured Slider Types
@@ -55,6 +72,8 @@ export interface HomepageProps {
 export interface Comment {
   author: string;
   post: string;
+  date?: string;
+  email?: string;
 }
 
 // Common Component Props
