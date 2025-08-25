@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Card, CardMedia, CardContent, Pagination, Button, Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
 import { Article, Comment } from '../../types';
 
@@ -179,6 +179,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [categoryTitle, setCategoryTitle] = useState('NEWS ARCHIVE');
   const location = useLocation();
+  const navigate = useNavigate();
   const articlesPerPage = 12;
 
   // WordPress category ID mapping based on actual WordPress categories API (Total: 35 categories)
@@ -342,7 +343,9 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
       image: article.image,
       excerpt: article.excerpt,
       comments: 0, // WordPress doesn't provide comment count in this endpoint
-      category: article.category || 'Local'
+      category: article.category || 'Local',
+      content: article.content,
+      author: article.author
     }));
   };
 
@@ -440,6 +443,16 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleArticleClick = (article: Article) => {
+    // Pass the full article data via state instead of just slug
+    navigate(`/article/${article.id}`, { 
+      state: { 
+        article: article,
+        categoryTitle: categoryTitle
+      } 
+    });
+  };
+
   // Calculate articles for current page
   const startIndex = (currentPage - 1) * articlesPerPage;
   const endIndex = startIndex + articlesPerPage;
@@ -516,6 +529,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
                           variant="outlined" 
                           size="small" 
                           sx={{ mt: 2, alignSelf: 'flex-start' }}
+                          onClick={() => handleArticleClick(article)}
                         >
                           Continue reading
                         </Button>
