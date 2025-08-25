@@ -482,6 +482,7 @@ class WordPressNewsService {
               }
             };
           }
+
           // Include all articles (with or without images for debugging)
           // Only filter out if image exists but is from wrong domain
           if (!featuredImage || featuredImage.includes('megaphoneoz.com')) {
@@ -640,6 +641,7 @@ class WordPressNewsService {
       }
     });
   }
+
   async getLatestNewsByCategory(categorySlug: string, limit: number = 10): Promise<FormattedNewsArticle[]> {
     const cacheKey = `category-${categorySlug}-${limit}`;
     const cached = apiCache.get(cacheKey);
