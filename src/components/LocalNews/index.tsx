@@ -372,13 +372,18 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
         setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
         setLoading(false);
       }
-      
       // Only fetch from WordPress if we have a category ID
       if (!categoryId) {
         console.log('No category ID found for path:', location.pathname);
         console.log('getCategoryIdFromPath function returned:', { categoryId, title });
+        setLoading(false);
+        setArticles([]);
         return;
       }
+      
+      // Set loading state while fetching
+      setLoading(true);
+      setArticles([]);
       
       try {
         const newsService = WordPressNewsService.getInstance();
@@ -399,22 +404,35 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
           );
           
           console.log('WordPress API response:', wpArticles);
-          if (wpArticles && wpArticles.length > 0 && !isCancelled) {
-            const transformedArticles = transformNewsData(wpArticles);
-            console.log('Transformed articles:', transformedArticles);
-            setArticles(transformedArticles);
-            setTotalPages(Math.ceil(transformedArticles.length / articlesPerPage));
-            console.log(`Successfully loaded ${wpArticles.length} WordPress articles for ${title}`);
-          } else if (!isCancelled) {
-            console.warn(`No WordPress articles found for ${title}, received:`, wpArticles);
+          if (!isCancelled) {
+            if (wpArticles && wpArticles.length > 0) {
+              const transformedArticles = transformNewsData(wpArticles);
+              console.log('Transformed articles:', transformedArticles);
+              setArticles(transformedArticles);
+              setTotalPages(Math.ceil(transformedArticles.length / articlesPerPage));
+              console.log(`Successfully loaded ${wpArticles.length} WordPress articles for ${title}`);
+            } else {
+              console.warn(`No WordPress articles found for ${title}, received:`, wpArticles);
+              setArticles([]);
+              setTotalPages(1);
+            }
+            setLoading(false);
           }
         } catch (newsError) {
-          console.error(`Error loading WordPress articles for ${title} (using fallback):`, newsError);
+          if (!isCancelled) {
+            console.error(`Error loading WordPress articles for ${title}:`, newsError);
+            setArticles(fallbackArticles); // Only use fallback on error
+            setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
+            setLoading(false);
+          }
         }
         
       } catch (error) {
         if (!isCancelled) {
-          console.error(`Error loading WordPress articles for ${title} (using fallback):`, error);
+          console.error(`Error loading WordPress articles for ${title}:`, error);
+          setArticles(fallbackArticles); // Only use fallback on error
+          setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
+          setLoading(false);
         }
       }
     };
