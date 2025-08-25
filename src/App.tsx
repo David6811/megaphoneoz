@@ -9,6 +9,7 @@ import AboutUs from './components/AboutUs';
 import ContactUs from './components/ContactUs';
 import Footer from './components/Footer';
 import Homepage from './components/Homepage';
+import LocalNews from './components/LocalNews';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +23,8 @@ const App: React.FC = () => {
             <Route path="/megaphoneoz" element={<Homepage />} />
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/category/news/localnews" element={<LocalNews />} />
+            <Route path="/local-news" element={<LocalNews />} />
           </Routes>
           <Footer />
         </div>
