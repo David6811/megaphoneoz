@@ -95,6 +95,31 @@ interface WordPressAuthor {
   };
 }
 
+interface WordPressComment {
+  id: number;
+  post: number;
+  parent: number;
+  author: number;
+  author_name: string;
+  author_url: string;
+  author_avatar_urls: {
+    24: string;
+    48: string;
+    96: string;
+  };
+  date: string;
+  date_gmt: string;
+  content: {
+    rendered: string;
+  };
+  link: string;
+  status: string;
+  type: string;
+  author_user_agent: string;
+  meta: any[];
+  _links: any;
+}
+
 interface FormattedNewsArticle {
   id: number;
   title: string;
@@ -106,6 +131,16 @@ interface FormattedNewsArticle {
   link: string;
   content?: string;
   author?: WordPressAuthor;
+  commentCount?: number;
+}
+
+interface FormattedComment {
+  id: number;
+  postId: number;
+  authorName: string;
+  content: string;
+  date: string;
+  avatarUrl: string;
 }
 
 class WordPressNewsService {
@@ -247,6 +282,104 @@ class WordPressNewsService {
     }
   }
 
+  async fetchCommentsByPostId(postId: number): Promise<WordPressComment[]> {
+    const cacheKey = `comments-post-${postId}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      console.log(`Using cached comments for post ${postId}`);
+      return cached;
+    }
+
+    return this.queueRequest(async () => {
+      console.log(`Fetching comments for post ${postId}`);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log(`Comments request timeout for post ${postId}`);
+          controller.abort();
+        }, 10000);
+
+        const response = await fetch(`${this.API_BASE}/comments?post=${postId}&status=approve&per_page=100`, {
+          headers: {
+            'Authorization': this.AUTH_HEADER,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+          mode: 'cors'
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          console.warn(`Failed to fetch comments for post ${postId}: ${response.status}`);
+          return [];
+        }
+
+        const comments = await response.json();
+        console.log(`Successfully fetched ${comments.length} comments for post ${postId}`);
+        apiCache.set(cacheKey, comments, 5); // Cache for 5 minutes
+        return comments;
+      } catch (error) {
+        console.error(`Error fetching comments for post ${postId}:`, error);
+        return [];
+      }
+    });
+  }
+
+  async fetchRecentComments(limit: number = 10): Promise<FormattedComment[]> {
+    const cacheKey = `recent-comments-${limit}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      console.log(`Using cached recent comments`);
+      return cached;
+    }
+
+    return this.queueRequest(async () => {
+      console.log(`Fetching ${limit} recent comments`);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log('Recent comments request timeout');
+          controller.abort();
+        }, 10000);
+
+        const response = await fetch(`${this.API_BASE}/comments?status=approve&per_page=${limit}&orderby=date&order=desc`, {
+          headers: {
+            'Authorization': this.AUTH_HEADER,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+          mode: 'cors'
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          console.warn(`Failed to fetch recent comments: ${response.status}`);
+          return [];
+        }
+
+        const comments: WordPressComment[] = await response.json();
+        console.log(`Successfully fetched ${comments.length} recent comments`);
+        
+        const formattedComments: FormattedComment[] = comments.map(comment => ({
+          id: comment.id,
+          postId: comment.post,
+          authorName: comment.author_name,
+          content: this.stripHtmlTags(comment.content.rendered),
+          date: this.formatDate(comment.date),
+          avatarUrl: comment.author_avatar_urls['48'] || comment.author_avatar_urls['96'] || comment.author_avatar_urls['24']
+        }));
+
+        apiCache.set(cacheKey, formattedComments, 5); // Cache for 5 minutes
+        return formattedComments;
+      } catch (error) {
+        console.error('Error fetching recent comments:', error);
+        return [];
+      }
+    });
+  }
+
   private formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -364,6 +497,15 @@ class WordPressNewsService {
           };
         }
 
+        // Get comment count for this post
+        let commentCount = 0;
+        try {
+          const comments = await this.fetchCommentsByPostId(post.id);
+          commentCount = comments.length;
+        } catch (error) {
+          console.warn(`Failed to get comment count for post ${post.id}:`, error);
+        }
+
         // Only include articles with valid images (WordPress images only)
         if (featuredImage && featuredImage.includes('megaphoneoz.com')) {
           const formattedArticle: FormattedNewsArticle = {
@@ -376,11 +518,12 @@ class WordPressNewsService {
             slug: post.slug,
             link: `https://megaphoneoz.com/${post.slug}`,
             content: post.content.rendered,
-            author: authorInfo
+            author: authorInfo,
+            commentCount: commentCount
           };
 
           formattedArticles.push(formattedArticle);
-          console.log(`Added article with image: ${featuredImage}`);
+          console.log(`Added article with image: ${featuredImage}, comments: ${commentCount}`);
         } else {
           console.log(`Skipping article "${post.title.rendered}" - no valid WordPress image`);
         }
@@ -483,6 +626,15 @@ class WordPressNewsService {
             };
           }
 
+          // Get comment count for this post
+          let commentCount = 0;
+          try {
+            const comments = await this.fetchCommentsByPostId(post.id);
+            commentCount = comments.length;
+          } catch (error) {
+            console.warn(`Failed to get comment count for post ${post.id}:`, error);
+          }
+
           // Include all articles (with or without images for debugging)
           // Only filter out if image exists but is from wrong domain
           if (!featuredImage || featuredImage.includes('megaphoneoz.com')) {
@@ -496,10 +648,11 @@ class WordPressNewsService {
               slug: post.slug,
               link: `https://megaphoneoz.com/${post.slug}`,
               content: post.content.rendered,
-              author: authorInfo
+              author: authorInfo,
+              commentCount: commentCount
             };
 
-            console.log(`Added article: "${formattedArticle.title}" with image: ${featuredImage || 'no image'}`);
+            console.log(`Added article: "${formattedArticle.title}" with image: ${featuredImage || 'no image'}, comments: ${commentCount}`);
             formattedArticles.push(formattedArticle);
           }
         }
@@ -729,4 +882,4 @@ class WordPressNewsService {
 }
 
 export default WordPressNewsService;
-export type { FormattedNewsArticle, WordPressPost, WordPressMedia, WordPressAuthor };
+export type { FormattedNewsArticle, WordPressPost, WordPressMedia, WordPressAuthor, WordPressComment, FormattedComment };

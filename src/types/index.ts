@@ -21,6 +21,7 @@ export interface Article {
   image: string;
   excerpt?: string;
   comments?: number;
+  commentCount?: number;
   category?: string;
   content?: string;
   author?: WordPressAuthor;
@@ -74,6 +75,15 @@ export interface Comment {
   post: string;
   date?: string;
   email?: string;
+}
+
+export interface FormattedComment {
+  id: number;
+  postId: number;
+  authorName: string;
+  content: string;
+  date: string;
+  avatarUrl: string;
 }
 
 // Common Component Props
