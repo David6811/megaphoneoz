@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Card, CardMedia, CardContent, Pagination, Button, Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import WordPressNewsService, { FormattedNewsArticle, FormattedComment } from '../../services/wordpressNewsService';
 import { Article, Comment } from '../../types';
 
 // Styled components following Material-First strategy
@@ -174,6 +174,7 @@ interface LocalNewsProps {
 
 const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [recentComments, setRecentComments] = useState<FormattedComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -311,7 +312,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
     "COMMUNITY GARDEN PROJECT SEEKS VOLUNTEERS"
   ];
 
-  const recentComments: Comment[] = [
+  const fallbackRecentComments: Comment[] = [
     { author: "Sarah M.", post: "Council Approves New Community Center Project" },
     { author: "Mike Johnson", post: "Local Schools Report Increased Enrollment" },
     { author: "Emma Wilson", post: "Farmers Market Expands to Weekend Operation" },
@@ -342,7 +343,8 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
       date: article.date,
       image: article.image,
       excerpt: article.excerpt,
-      comments: 0, // WordPress doesn't provide comment count in this endpoint
+      comments: article.commentCount || 0, // Use real comment count from WordPress
+      commentCount: article.commentCount || 0,
       category: article.category || 'Local',
       content: article.content,
       author: article.author
@@ -437,7 +439,27 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
       }
     };
 
+    // Fetch recent comments
+    const fetchRecentComments = async () => {
+      try {
+        const newsService = WordPressNewsService.getInstance();
+        const comments = await newsService.fetchRecentComments(5);
+        
+        if (comments && comments.length > 0 && !isCancelled) {
+          setRecentComments(comments);
+          console.log(`Successfully loaded ${comments.length} recent comments`);
+        } else if (!isCancelled) {
+          console.warn('No recent comments found, keeping fallback data');
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Error loading recent comments (using fallback):', error);
+        }
+      }
+    };
+
     fetchCategoryNews();
+    fetchRecentComments();
     
     return () => {
       isCancelled = true;
@@ -615,12 +637,41 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
             <SidebarSection>
               <SidebarTitle>RECENT COMMENTS</SidebarTitle>
               <RecentList>
-                {recentComments.map((comment, index) => (
-                  <li key={index}>
-                    <strong>{comment.author}</strong> on{' '}
-                    <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{comment.post}</Box>
+                {recentComments.length > 0 ? recentComments.map((comment) => (
+                  <li key={comment.id}>
+                    <strong>{comment.authorName}</strong> on{' '}
+                    <Box 
+                      component="button" 
+                      sx={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: 'inherit', 
+                        cursor: 'pointer', 
+                        textAlign: 'left', 
+                        p: 0, 
+                        fontSize: 'inherit', 
+                        lineHeight: 'inherit', 
+                        fontFamily: 'inherit',
+                        '&:hover': {
+                          textDecoration: 'underline'
+                        }
+                      }}
+                    >
+                      {comment.content.length > 50 ? `${comment.content.substring(0, 50)}...` : comment.content}
+                    </Box>
+                    <Typography variant="caption" display="block" sx={{ mt: 0.5, color: 'text.secondary' }}>
+                      {comment.date}
+                    </Typography>
                   </li>
-                ))}
+                )) : (
+                  // Fallback comments if WordPress data is not available
+                  fallbackRecentComments.map((comment, index) => (
+                    <li key={index}>
+                      <strong>{comment.author}</strong> on{' '}
+                      <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{comment.post}</Box>
+                    </li>
+                  ))
+                )}
               </RecentList>
             </SidebarSection>
 

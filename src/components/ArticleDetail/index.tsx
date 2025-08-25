@@ -20,7 +20,7 @@ import TwitterIcon from '@mui/icons-material/Twitter';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import EmailIcon from '@mui/icons-material/Email';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import WordPressNewsService, { FormattedNewsArticle, FormattedComment } from '../../services/wordpressNewsService';
 import { Comment } from '../../types';
 
 const ArticleContainer = styled(Box)(({ theme }) => ({
@@ -242,7 +242,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
   const [article, setArticle] = useState<FormattedNewsArticle | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<FormattedNewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<FormattedComment[]>([]);
   const [newComment, setNewComment] = useState({ name: '', email: '', website: '', comment: '' });
   const [saveInfo, setSaveInfo] = useState(false);
 
@@ -419,7 +419,48 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
         // Always fetch related articles
         const related = await newsService.getLatestNewsForSlider(4);
         setRelatedArticles(related.slice(0, 3));
-        setComments(mockComments);
+        
+        // Fetch real comments for this article after we have the article data
+        // Use the current article state or get it from the API
+        let currentArticleId: number | null = null;
+        
+        if (id) {
+          currentArticleId = parseInt(id);
+        } else if (location.state && (location.state as any).article) {
+          currentArticleId = (location.state as any).article.id;
+        }
+        
+        if (currentArticleId) {
+          try {
+            const articleComments = await newsService.fetchCommentsByPostId(currentArticleId);
+            const formattedComments: FormattedComment[] = articleComments.map(comment => ({
+              id: comment.id,
+              postId: comment.post,
+              authorName: comment.author_name,
+              content: comment.content.rendered.replace(/<[^>]*>/g, ''), // Strip HTML
+              date: new Date(comment.date).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              }),
+              avatarUrl: comment.author_avatar_urls['48'] || comment.author_avatar_urls['96'] || comment.author_avatar_urls['24'] || ''
+            }));
+            setComments(formattedComments);
+            console.log(`Successfully loaded ${formattedComments.length} comments for article ${currentArticleId}`);
+          } catch (error) {
+            console.error('Error loading comments, using fallback:', error);
+            // Convert mockComments to FormattedComment format as fallback
+            const fallbackComments: FormattedComment[] = mockComments.map((comment, index) => ({
+              id: index + 1,
+              postId: currentArticleId || 0,
+              authorName: comment.author,
+              content: comment.post,
+              date: comment.date || 'March 15, 2024',
+              avatarUrl: ''
+            }));
+            setComments(fallbackComments);
+          }
+        }
         
       } catch (error) {
         console.error('Error fetching article data:', error);
@@ -429,7 +470,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
     };
 
     fetchArticleData();
-  }, [id, location.state, article]);
+  }, [id, location.state]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -457,11 +498,17 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In real implementation, submit comment to WordPress API
-    const comment: Comment = {
-      author: newComment.name,
-      post: newComment.comment,
-      date: new Date().toLocaleDateString(),
-      email: newComment.email
+    const comment: FormattedComment = {
+      id: Date.now(), // Temporary ID for client-side comment
+      postId: article?.id || 0,
+      authorName: newComment.name,
+      content: newComment.comment,
+      date: new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      avatarUrl: ''
     };
     setComments([comment, ...comments]);
     setNewComment({ name: '', email: '', website: '', comment: '' });
@@ -576,9 +623,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                   <Typography variant="body2" fontWeight={600}>
                     {generateAuthorInfo(article).name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {generateAuthorInfo(article).email}
-                  </Typography>
                 </Box>
               </Box>
 
@@ -654,12 +698,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                     <Typography variant="body2" color="text.secondary" paragraph>
                       {generateAuthorInfo(article).bio}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <EmailIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        {generateAuthorInfo(article).email}
-                      </Typography>
-                    </Box>
                   </Box>
                 </Box>
               </CardContent>
@@ -714,6 +752,43 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
               <Typography variant="h5" gutterBottom>
                 Comments ({comments.length})
               </Typography>
+
+              {/* Comments List */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 4 }}>
+                {comments.length > 0 ? (
+                  comments.map((comment) => (
+                    <Card key={comment.id} sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                        <Avatar 
+                          src={comment.avatarUrl} 
+                          sx={{ width: 40, height: 40 }}
+                        >
+                          {comment.authorName.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                            <Typography variant="subtitle2" fontWeight={600}>
+                              {comment.authorName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {comment.date}
+                            </Typography>
+                          </Box>
+                          <Typography variant="body2">
+                            {comment.content}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Card>
+                  ))
+                ) : (
+                  <Card sx={{ p: 3 }}>
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                      No comments yet. Be the first to comment!
+                    </Typography>
+                  </Card>
+                )}
+              </Box>
 
               {/* Comment Form */}
               <Card sx={{ p: 3, mb: 4 }}>
@@ -816,32 +891,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                   </Button>
                 </Box>
               </Card>
-
-              {/* Comments List */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {comments.map((comment, index) => (
-                  <Card key={index} sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                      <Avatar sx={{ width: 40, height: 40 }}>
-                        {comment.author.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                          <Typography variant="subtitle2" fontWeight={600}>
-                            {comment.author}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {comment.date}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2">
-                          {comment.post}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Card>
-                ))}
-              </Box>
             </Box>
           </Box>
         </Box>
