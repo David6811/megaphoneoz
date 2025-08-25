@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Card, CardMedia, CardContent, Pagination, Button } from '@mui/material';
+import { Box, Container, Typography, Card, CardMedia, CardContent, Pagination, Button, Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useLocation } from 'react-router-dom';
 import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
@@ -126,15 +126,58 @@ const RecentList = styled('ul')(({ theme }) => ({
   },
 }));
 
+// Loading skeleton component
+const ArticleSkeleton: React.FC = () => (
+  <StyledCard>
+    <Skeleton variant="rectangular" height={200} />
+    <CardContent>
+      <Skeleton variant="text" height={32} width="90%" />
+      <Skeleton variant="text" height={20} width="100%" />
+      <Skeleton variant="text" height={20} width="80%" />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+        <Skeleton variant="text" width={100} />
+        <Skeleton variant="text" width={60} />
+      </Box>
+      <Skeleton variant="rectangular" height={36} width={120} sx={{ mt: 2 }} />
+    </CardContent>
+  </StyledCard>
+);
+
+// Empty state component
+const EmptyState: React.FC<{ category: string }> = ({ category }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      py: 8,
+      textAlign: 'center',
+      color: 'text.secondary'
+    }}
+  >
+    <Typography variant="h5" gutterBottom>
+      📰
+    </Typography>
+    <Typography variant="h6" gutterBottom>
+      No articles found
+    </Typography>
+    <Typography variant="body2">
+      There are currently no articles available in {category}.
+    </Typography>
+  </Box>
+);
+
 interface LocalNewsProps {
   className?: string;
 }
 
 const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [categoryTitle, setCategoryTitle] = useState('LOCAL NEWS ARCHIVE');
+  const [categoryTitle, setCategoryTitle] = useState('NEWS ARCHIVE');
   const location = useLocation();
   const articlesPerPage = 12;
 
@@ -320,18 +363,18 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
         title 
       });
       
-      // Start with fallback data immediately
-      if (!isCancelled) {
-        setArticles(fallbackArticles);
-        setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
-      }
-      
       // Only fetch from WordPress if we have a category ID
       if (!categoryId) {
         console.log('No category ID found for path:', location.pathname);
         console.log('getCategoryIdFromPath function returned:', { categoryId, title });
+        setLoading(false);
+        setArticles([]);
         return;
       }
+      
+      // Set loading state while fetching
+      setLoading(true);
+      setArticles([]);
       
       try {
         const newsService = WordPressNewsService.getInstance();
@@ -352,22 +395,35 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
           );
           
           console.log('WordPress API response:', wpArticles);
-          if (wpArticles && wpArticles.length > 0 && !isCancelled) {
-            const transformedArticles = transformNewsData(wpArticles);
-            console.log('Transformed articles:', transformedArticles);
-            setArticles(transformedArticles);
-            setTotalPages(Math.ceil(transformedArticles.length / articlesPerPage));
-            console.log(`Successfully loaded ${wpArticles.length} WordPress articles for ${title}`);
-          } else if (!isCancelled) {
-            console.warn(`No WordPress articles found for ${title}, received:`, wpArticles);
+          if (!isCancelled) {
+            if (wpArticles && wpArticles.length > 0) {
+              const transformedArticles = transformNewsData(wpArticles);
+              console.log('Transformed articles:', transformedArticles);
+              setArticles(transformedArticles);
+              setTotalPages(Math.ceil(transformedArticles.length / articlesPerPage));
+              console.log(`Successfully loaded ${wpArticles.length} WordPress articles for ${title}`);
+            } else {
+              console.warn(`No WordPress articles found for ${title}, received:`, wpArticles);
+              setArticles([]);
+              setTotalPages(1);
+            }
+            setLoading(false);
           }
         } catch (newsError) {
-          console.error(`Error loading WordPress articles for ${title} (using fallback):`, newsError);
+          if (!isCancelled) {
+            console.error(`Error loading WordPress articles for ${title}:`, newsError);
+            setArticles(fallbackArticles); // Only use fallback on error
+            setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
+            setLoading(false);
+          }
         }
         
       } catch (error) {
         if (!isCancelled) {
-          console.error(`Error loading WordPress articles for ${title} (using fallback):`, error);
+          console.error(`Error loading WordPress articles for ${title}:`, error);
+          setArticles(fallbackArticles); // Only use fallback on error
+          setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
+          setLoading(false);
         }
       }
     };
@@ -423,43 +479,56 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
               gap: 3,
               mb: 4 
             }}>
-              {currentArticles.map((article) => (
-                <Box key={article.id}>
-                  <StyledCard>
-                    {article.image && (
-                      <StyledCardMedia
-                        image={article.image}
-                        title={article.title}
-                      />
-                    )}
-                    <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                      <ArticleTitle variant="h6">
-                        {article.title}
-                      </ArticleTitle>
-                      {article.excerpt && (
-                        <ArticleExcerpt variant="body2">
-                          {article.excerpt}
-                        </ArticleExcerpt>
+              {loading ? (
+                // Show loading skeletons
+                Array.from({ length: 6 }).map((_, index) => (
+                  <ArticleSkeleton key={`skeleton-${index}`} />
+                ))
+              ) : currentArticles.length > 0 ? (
+                // Show actual articles
+                currentArticles.map((article) => (
+                  <Box key={article.id}>
+                    <StyledCard>
+                      {article.image && (
+                        <StyledCardMedia
+                          image={article.image}
+                          title={article.title}
+                        />
                       )}
-                      <ArticleMeta>
-                        <Typography variant="caption" color="text.secondary">
-                          {article.date}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          💬 {article.comments}
-                        </Typography>
-                      </ArticleMeta>
-                      <Button 
-                        variant="outlined" 
-                        size="small" 
-                        sx={{ mt: 2, alignSelf: 'flex-start' }}
-                      >
-                        Continue reading
-                      </Button>
-                    </CardContent>
-                  </StyledCard>
+                      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                        <ArticleTitle variant="h6">
+                          {article.title}
+                        </ArticleTitle>
+                        {article.excerpt && (
+                          <ArticleExcerpt variant="body2">
+                            {article.excerpt}
+                          </ArticleExcerpt>
+                        )}
+                        <ArticleMeta>
+                          <Typography variant="caption" color="text.secondary">
+                            {article.date}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            💬 {article.comments}
+                          </Typography>
+                        </ArticleMeta>
+                        <Button 
+                          variant="outlined" 
+                          size="small" 
+                          sx={{ mt: 2, alignSelf: 'flex-start' }}
+                        >
+                          Continue reading
+                        </Button>
+                      </CardContent>
+                    </StyledCard>
+                  </Box>
+                ))
+              ) : (
+                // Show empty state
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                  <EmptyState category={categoryTitle.toLowerCase()} />
                 </Box>
-              ))}
+              )}
             </Box>
 
             {/* Pagination */}
