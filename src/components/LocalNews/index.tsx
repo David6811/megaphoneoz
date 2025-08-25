@@ -131,7 +131,6 @@ interface LocalNewsProps {
 
 const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [loading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const articlesPerPage = 12;
@@ -431,7 +430,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
               <RecentList>
                 {recentArticles.map((article, index) => (
                   <li key={index}>
-                    <a href="#" role="button" tabIndex={0}>{article}</a>
+                    <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{article}</Box>
                   </li>
                 ))}
               </RecentList>
@@ -444,7 +443,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
                 {recentComments.map((comment, index) => (
                   <li key={index}>
                     <strong>{comment.author}</strong> on{' '}
-                    <a href="#" role="button" tabIndex={0}>{comment.post}</a>
+                    <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{comment.post}</Box>
                   </li>
                 ))}
               </RecentList>
@@ -456,7 +455,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
               <RecentList>
                 {bestOfRest.map((item, index) => (
                   <li key={index}>
-                    📰 <a href="#" role="button" tabIndex={0}>{item}</a>
+                    📰 <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{item}</Box>
                   </li>
                 ))}
               </RecentList>

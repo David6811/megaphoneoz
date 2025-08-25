@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useNavigate } from 'react-router-dom';
 import { HeaderProps, NavigationItem, NavigationDropdownItem } from '../../types';
 import WordPressMenuService from '../../services/wordpressMenuService';
 
@@ -19,6 +20,7 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
   const [, setLoading] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
 
   // Fallback data (current hardcoded menu) in case WordPress fails
   const fallbackNavigationItems: NavigationItem[] = [
@@ -142,6 +144,15 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
     setExpandedMenus({});
   };
 
+  const handleNavigate = (href: string) => {
+    navigate(href);
+    setNewsAnchorEl(null);
+    setLifestyleAnchorEl(null);
+    setArtsAnchorEl(null);
+    setHoveredSubmenu(null);
+    closeMobileMenu();
+  };
+
   const toggleSubmenu = (menuLabel: string) => {
     setExpandedMenus(prev => ({
       ...prev,
@@ -163,18 +174,21 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
             onMouseEnter={() => setHoveredSubmenu(category.hasSubmenu ? category.label : null)}
             onMouseLeave={() => setHoveredSubmenu(null)}
           >
-            <Box sx={{ 
-              display: 'flex',
-              alignItems: 'center',
-              px: 3,
-              py: 2,
-              cursor: 'pointer',
-              borderBottom: index < categories.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              }
-            }}>
-              <Box component="a" href={category.href} sx={{ 
+            <Box 
+              onClick={!category.hasSubmenu ? () => handleNavigate(category.href) : undefined}
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                px: 3,
+                py: 2,
+                cursor: 'pointer',
+                borderBottom: index < categories.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
+            >
+              <Box sx={{ 
                 color: 'white',
                 textDecoration: 'none',
                 fontSize: '0.875rem',
@@ -200,18 +214,23 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                 zIndex: 1001
               }}>
                 {category.submenu.map((subitem, subIndex) => (
-                  <Box key={subIndex} component="a" href={subitem.href} sx={{
-                    display: 'block',
-                    color: 'white',
-                    textDecoration: 'none',
-                    fontSize: '0.875rem',
-                    py: 1.5,
-                    px: 3,
-                    borderBottom: subIndex < category.submenu!.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                    }
-                  }}>
+                  <Box 
+                    key={subIndex} 
+                    onClick={() => handleNavigate(subitem.href)}
+                    sx={{
+                      display: 'block',
+                      color: 'white',
+                      textDecoration: 'none',
+                      fontSize: '0.875rem',
+                      py: 1.5,
+                      px: 3,
+                      cursor: 'pointer',
+                      borderBottom: subIndex < category.submenu!.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                      }
+                    }}
+                  >
                     {subitem.label}
                   </Box>
                 ))}
@@ -405,8 +424,8 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
             {navigationItems.map((item, index) => (
               <Box component="li" key={index} sx={{ position: 'relative' }}>
                 <Box 
-                  component={item.hasDropdown ? "div" : "a"}
-                  href={!item.hasDropdown ? item.href : undefined}
+                  component="div"
+                  onClick={!item.hasDropdown ? () => handleNavigate(item.href) : undefined}
                   onMouseEnter={item.label === 'News' ? handleNewsEnter : item.label === 'Lifestyle' ? handleLifestyleEnter : item.label === 'Arts and Entertainment' ? handleArtsEnter : undefined}
                   onMouseLeave={item.label === 'News' ? handleNewsLeave : item.label === 'Lifestyle' ? handleLifestyleLeave : item.label === 'Arts and Entertainment' ? handleArtsLeave : undefined}
                   sx={{ 
@@ -452,19 +471,24 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                       color: 'white',
                     }}>
                       {newsCategories.map((category, catIndex) => (
-                        <Box key={catIndex} component="a" href={category.href} sx={{
-                          display: 'block',
-                          color: 'white',
-                          textDecoration: 'none',
-                          fontSize: '0.875rem',
-                          fontWeight: 500,
-                          px: 3,
-                          py: 2,
-                          borderBottom: catIndex < newsCategories.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        }}>
+                        <Box 
+                          key={catIndex} 
+                          onClick={() => handleNavigate(category.href)}
+                          sx={{
+                            display: 'block',
+                            color: 'white',
+                            textDecoration: 'none',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            px: 3,
+                            py: 2,
+                            cursor: 'pointer',
+                            borderBottom: catIndex < newsCategories.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                            }
+                          }}
+                        >
                           {category.label}
                         </Box>
                       ))}
@@ -542,9 +566,8 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
             {navigationItems.map((item, index) => (
               <React.Fragment key={index}>
                 <ListItem 
-                  component={item.hasDropdown ? "div" : "a"}
-                  href={!item.hasDropdown ? item.href : undefined}
-                  onClick={item.hasDropdown ? () => toggleSubmenu(item.label) : closeMobileMenu}
+                  component="div"
+                  onClick={item.hasDropdown ? () => toggleSubmenu(item.label) : () => handleNavigate(item.href)}
                   sx={{ 
                     cursor: 'pointer',
                     '&:hover': { backgroundColor: 'rgba(198, 8, 0, 0.05)' }
@@ -573,10 +596,9 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                       {item.label === 'News' && newsCategories.map((category, catIndex) => (
                         <ListItem 
                           key={catIndex}
-                          component="a" 
-                          href={category.href}
-                          onClick={closeMobileMenu}
-                          sx={{ py: 1 }}
+                          component="div" 
+                          onClick={() => handleNavigate(category.href)}
+                          sx={{ py: 1, cursor: 'pointer' }}
                         >
                           <ListItemText 
                             primary={category.label}
@@ -593,9 +615,8 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                       {item.label === 'Lifestyle' && lifestyleCategories.map((category, catIndex) => (
                         <Box key={catIndex}>
                           <ListItem 
-                            component={category.hasSubmenu ? "div" : "a"}
-                            href={!category.hasSubmenu ? category.href : undefined}
-                            onClick={category.hasSubmenu ? () => toggleSubmenu(`${item.label}-${category.label}`) : closeMobileMenu}
+                            component="div"
+                            onClick={category.hasSubmenu ? () => toggleSubmenu(`${item.label}-${category.label}`) : () => handleNavigate(category.href)}
                             sx={{ py: 1, cursor: 'pointer' }}
                           >
                             <ListItemText 
@@ -619,10 +640,9 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                                 {category.submenu.map((subitem, subIndex) => (
                                   <ListItem 
                                     key={subIndex}
-                                    component="a" 
-                                    href={subitem.href}
-                                    onClick={closeMobileMenu}
-                                    sx={{ py: 0.5, pl: 4 }}
+                                    component="div" 
+                                    onClick={() => handleNavigate(subitem.href)}
+                                    sx={{ py: 0.5, pl: 4, cursor: 'pointer' }}
                                   >
                                     <ListItemText 
                                       primary={subitem.label}
@@ -644,9 +664,8 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                       {item.label === 'Arts and Entertainment' && artsCategories.map((category, catIndex) => (
                         <Box key={catIndex}>
                           <ListItem 
-                            component={category.hasSubmenu ? "div" : "a"}
-                            href={!category.hasSubmenu ? category.href : undefined}
-                            onClick={category.hasSubmenu ? () => toggleSubmenu(`${item.label}-${category.label}`) : closeMobileMenu}
+                            component="div"
+                            onClick={category.hasSubmenu ? () => toggleSubmenu(`${item.label}-${category.label}`) : () => handleNavigate(category.href)}
                             sx={{ py: 1, cursor: 'pointer' }}
                           >
                             <ListItemText 
@@ -670,10 +689,9 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                                 {category.submenu.map((subitem, subIndex) => (
                                   <ListItem 
                                     key={subIndex}
-                                    component="a" 
-                                    href={subitem.href}
-                                    onClick={closeMobileMenu}
-                                    sx={{ py: 0.5, pl: 4 }}
+                                    component="div" 
+                                    onClick={() => handleNavigate(subitem.href)}
+                                    sx={{ py: 0.5, pl: 4, cursor: 'pointer' }}
                                   >
                                     <ListItemText 
                                       primary={subitem.label}
