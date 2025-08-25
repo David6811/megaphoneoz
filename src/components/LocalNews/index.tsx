@@ -610,7 +610,8 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
               <RecentList>
                 {bestOfRest.map((item, index) => (
                   <li key={index}>
-                    📰 <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{item}</Box>
+                    <Box component="img" src="https://megaphoneoz.com/wp-content/uploads/2015/05/MegaphoneGravatar.jpg" alt="Megaphone Icon" sx={{ width: 16, height: 16, mr: 1, verticalAlign: 'middle' }} />
+                    <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{item}</Box>
                   </li>
                 ))}
               </RecentList>

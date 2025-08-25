@@ -385,12 +385,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               <h3 className="sidebar-title">BEST OF THE REST</h3>
               <ul className="best-of-list">
                 {bestOfRest.map((item: string, index: number) => (
-                  <li key={index}>📰 <a href="/news" role="button" tabIndex={0}>{item}</a></li>
+                  <li key={index} style={{ display: 'flex', alignItems: 'center' }}><img src="https://megaphoneoz.com/wp-content/uploads/2015/05/MegaphoneGravatar.jpg" alt="Megaphone Icon" style={{ width: 16, height: 16, marginRight: 8 }} /><a href="/news" role="button" tabIndex={0}>{item}</a></li>
                 ))}
               </ul>
-              <div className="login-link">
-                <a href="/login" role="button" tabIndex={0}>MegaphoneOz Users: Login</a>
-              </div>
             </div>
           </aside>
         </div>
