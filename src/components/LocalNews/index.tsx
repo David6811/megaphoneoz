@@ -654,11 +654,23 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
           <Box sx={{ flex: { md: '1 1 0%' } }}>
             {/* Search */}
             <SidebarSection>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box 
+                component="form"
+                onSubmit={(e: React.FormEvent) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  const searchTerm = formData.get('search') as string;
+                  if (searchTerm?.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+                  }
+                }}
+                sx={{ display: 'flex', gap: 1 }}
+              >
                 <Box
                   component="input"
                   type="text"
-                  placeholder="Search"
+                  name="search"
+                  placeholder="Search articles..."
                   sx={{
                     flex: 1,
                     p: 1,
@@ -668,7 +680,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
                     fontSize: '0.875rem',
                   }}
                 />
-                <Button variant="contained" size="small">🔍</Button>
+                <Button type="submit" variant="contained" size="small">🔍</Button>
               </Box>
             </SidebarSection>
 

@@ -28,6 +28,11 @@ interface WordPressPost {
   format: string;
   categories: number[];
   tags: number[];
+  _embedded?: {
+    'wp:featuredmedia'?: WordPressMedia[];
+    'wp:term'?: Array<Array<{ name: string; [key: string]: any }>>;
+    author?: WordPressAuthor[];
+  };
   _links: {
     self: Array<{ href: string }>;
     collection: Array<{ href: string }>;
@@ -874,6 +879,111 @@ class WordPressNewsService {
           }
         } else {
           console.error(`Unknown error getting news for category ${categorySlug}:`, error);
+        }
+        return [];
+      }
+    });
+  }
+
+  /**
+   * Search posts by keyword
+   * Uses WordPress REST API search endpoint
+   * @param searchTerm The search term
+   * @param limit Maximum number of results
+   * @returns Promise<FormattedNewsArticle[]>
+   */
+  async searchPosts(searchTerm: string, limit: number = 10): Promise<FormattedNewsArticle[]> {
+    const cacheKey = `search-${encodeURIComponent(searchTerm)}-${limit}`;
+
+    // Try cache first
+    const cached = apiCache.get(cacheKey);
+    if (cached) {
+      console.log(`Returning cached search results for: "${searchTerm}"`);
+      return cached;
+    }
+
+    return this.queueRequest(async () => {
+      try {
+        console.log(`Searching WordPress posts for: "${searchTerm}"`);
+        
+        // WordPress REST API search endpoint
+        const searchUrl = `${this.API_BASE}/posts?search=${encodeURIComponent(searchTerm)}&per_page=${limit}&_embed`;
+        
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(searchUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            ...this.AUTH_HEADER ? { 'Authorization': this.AUTH_HEADER } : {},
+          },
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`WordPress search API error: ${response.status} ${response.statusText}`);
+        }
+
+        const posts: WordPressPost[] = await response.json();
+        console.log(`WordPress search API returned ${posts.length} posts for "${searchTerm}"`);
+
+        if (!posts || posts.length === 0) {
+          console.warn(`No search results found for: "${searchTerm}"`);
+          return [];
+        }
+
+        const formattedArticles: FormattedNewsArticle[] = [];
+
+        for (const post of posts) {
+          // Get featured image
+          let featuredImage = '';
+          if (post.featured_media > 0 && post._embedded?.['wp:featuredmedia']) {
+            const media = post._embedded['wp:featuredmedia'][0];
+            if (media?.source_url) {
+              featuredImage = media.source_url;
+            }
+          }
+
+          // Get category name
+          let categoryName = 'News';
+          if (post.categories && post.categories.length > 0 && post._embedded?.['wp:term']) {
+            const categories = post._embedded['wp:term']?.[0];
+            if (categories && categories.length > 0) {
+              categoryName = categories[0].name || 'News';
+            }
+          }
+
+          const formattedArticle: FormattedNewsArticle = {
+            id: post.id,
+            title: this.stripHtmlTags(post.title.rendered),
+            date: this.formatDate(post.date),
+            excerpt: this.stripHtmlTags(post.excerpt.rendered),
+            image: featuredImage,
+            category: categoryName.toUpperCase(),
+            slug: post.slug,
+            link: `https://megaphoneoz.com/${post.slug}`
+          };
+
+          formattedArticles.push(formattedArticle);
+        }
+
+        console.log(`Successfully processed ${formattedArticles.length} search results for "${searchTerm}"`);
+        apiCache.set(cacheKey, formattedArticles, 5); // Cache for 5 minutes
+        return formattedArticles;
+
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            console.error(`WordPress search request was aborted for "${searchTerm}"`);
+          } else if (error.message.includes('Failed to fetch') || error.message.includes('ERR_INSUFFICIENT_RESOURCES')) {
+            console.error(`WordPress search API network/resource error for "${searchTerm}":`, error.message);
+          } else {
+            console.error(`WordPress search API error for "${searchTerm}":`, error.message);
+          }
+        } else {
+          console.error(`Unknown error searching WordPress for "${searchTerm}":`, error);
         }
         return [];
       }
