@@ -146,6 +146,8 @@ interface FormattedComment {
   content: string;
   date: string;
   avatarUrl: string;
+  authorUrl?: string; // Website URL of the comment author
+  status?: string; // Comment status (approve, hold, etc.)
 }
 
 class WordPressNewsService {
@@ -304,7 +306,7 @@ class WordPressNewsService {
           controller.abort();
         }, 10000);
 
-        const response = await fetch(`${this.API_BASE}/comments?post=${postId}&status=approve&per_page=100`, {
+        const response = await fetch(`${this.API_BASE}/comments?post=${postId}&status=approve,hold&per_page=100`, {
           headers: {
             'Authorization': this.AUTH_HEADER,
             'Content-Type': 'application/json',
@@ -348,7 +350,7 @@ class WordPressNewsService {
           controller.abort();
         }, 10000);
 
-        const response = await fetch(`${this.API_BASE}/comments?status=approve&per_page=${limit}&orderby=date&order=desc`, {
+        const response = await fetch(`${this.API_BASE}/comments?status=approve,hold&per_page=${limit}&orderby=date&order=desc`, {
           headers: {
             'Authorization': this.AUTH_HEADER,
             'Content-Type': 'application/json',
@@ -986,6 +988,92 @@ class WordPressNewsService {
           console.error(`Unknown error searching WordPress for "${searchTerm}":`, error);
         }
         return [];
+      }
+    });
+  }
+
+  /**
+   * Submit a new comment to a WordPress post
+   * @param postId The ID of the post to comment on
+   * @param authorName The name of the comment author
+   * @param authorEmail The email of the comment author
+   * @param content The comment content
+   * @param authorUrl Optional website URL of the author
+   * @returns Promise<WordPressComment | null>
+   */
+  async submitComment(
+    postId: number,
+    authorName: string,
+    authorEmail: string,
+    content: string,
+    authorUrl?: string
+  ): Promise<WordPressComment | null> {
+    return this.queueRequest(async () => {
+      try {
+        console.log(`Submitting comment to post ${postId} by ${authorName}`);
+        
+        const commentData = {
+          post: postId,
+          author_name: authorName,
+          author_email: authorEmail,
+          author_url: authorUrl || '',
+          content: content,
+          status: 'approved' // Set to 'approved' for immediate display, 'hold' for moderation queue
+        };
+
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(`${this.API_BASE}/comments`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': this.AUTH_HEADER
+          },
+          body: JSON.stringify(commentData),
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`WordPress comment submission failed: ${response.status} ${response.statusText}`, errorText);
+          
+          if (response.status === 403) {
+            throw new Error('Comment submission not allowed. Please check permissions.');
+          } else if (response.status === 400) {
+            throw new Error('Invalid comment data. Please check all required fields.');
+          } else {
+            throw new Error(`Comment submission failed: ${response.status} ${response.statusText}`);
+          }
+        }
+
+        const comment: WordPressComment = await response.json();
+        console.log('Comment submitted successfully:', comment);
+        
+        // Clear related cache entries to refresh comments
+        const cacheKeys = [
+          `comments-post-${postId}`,
+          `recent-comments-5`,
+          `recent-comments-10`
+        ];
+        cacheKeys.forEach(key => apiCache.delete(key));
+        
+        return comment;
+
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            console.error(`Comment submission was aborted for post ${postId}`);
+          } else if (error.message.includes('Failed to fetch') || error.message.includes('ERR_INSUFFICIENT_RESOURCES')) {
+            console.error(`WordPress comment API network error for post ${postId}:`, error.message);
+          } else {
+            console.error(`WordPress comment API error for post ${postId}:`, error.message);
+          }
+        } else {
+          console.error(`Unknown error submitting comment to post ${postId}:`, error);
+        }
+        throw error; // Re-throw to allow component to handle the error
       }
     });
   }
