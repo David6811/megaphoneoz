@@ -181,7 +181,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
   const [categoryTitle, setCategoryTitle] = useState('NEWS ARCHIVE');
   const location = useLocation();
   const navigate = useNavigate();
-  const articlesPerPage = 12;
+  const articlesPerPage = 6;
 
   // WordPress category ID mapping based on actual WordPress categories API (Total: 35 categories)
   const getCategoryIdFromPath = (path: string): { categoryId: number | null, title: string } => {
@@ -244,7 +244,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
     return { categoryId: null, title: 'NEWS ARCHIVE' };
   };
 
-  // Fallback data for local news
+  // Fallback data for local news - Extended to demonstrate pagination
   const fallbackArticles: Article[] = [
     {
       id: 1,
@@ -299,6 +299,69 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
       image: "",
       excerpt: "Small business owners gathered for the monthly networking breakfast to discuss challenges and opportunities in the current economic climate...",
       category: "Business"
+    },
+    {
+      id: 7,
+      title: "COMMUNITY GARDEN PROJECT SEEKS VOLUNTEERS",
+      date: "August 5, 2025",
+      comments: 11,
+      image: "",
+      excerpt: "A new community garden initiative is looking for volunteers to help transform an unused lot into a thriving green space for all residents...",
+      category: "Community"
+    },
+    {
+      id: 8,
+      title: "LOCAL FIRE DEPARTMENT RECEIVES NEW EQUIPMENT",
+      date: "August 3, 2025",
+      comments: 6,
+      image: "",
+      excerpt: "The fire department has received state-of-the-art rescue equipment that will enhance their ability to respond to emergencies throughout the region...",
+      category: "Safety"
+    },
+    {
+      id: 9,
+      title: "SUMMER FESTIVAL PLANNING COMMITTEE MEETS",
+      date: "August 1, 2025",
+      comments: 4,
+      image: "",
+      excerpt: "Organizers are finalizing details for the annual summer festival, which promises to be the biggest community celebration in years...",
+      category: "Events"
+    },
+    {
+      id: 10,
+      title: "NEW BIKE PATHS CONNECT NEIGHBORHOODS",
+      date: "July 28, 2025",
+      comments: 9,
+      image: "",
+      excerpt: "A network of new bike paths has been completed, providing safe cycling routes that connect residential areas to the downtown business district...",
+      category: "Infrastructure"
+    },
+    {
+      id: 11,
+      title: "YOUTH SPORTS PROGRAM REGISTRATION OPENS",
+      date: "July 25, 2025",
+      comments: 13,
+      image: "",
+      excerpt: "Registration is now open for fall youth sports programs, with new options including soccer, basketball, and tennis for children ages 6-16...",
+      category: "Sports"
+    },
+    {
+      id: 12,
+      title: "LOCAL ARTIST WINS NATIONAL COMPETITION",
+      date: "July 22, 2025",
+      comments: 8,
+      image: "",
+      excerpt: "A local artist has been recognized with a prestigious national award for their innovative sculpture that will be displayed in the town square...",
+      category: "Arts"
+    },
+    {
+      id: 13,
+      title: "SENIOR CENTER EXPANDS PROGRAMS",
+      date: "July 20, 2025",
+      comments: 5,
+      image: "",
+      excerpt: "The senior center is adding new fitness classes, computer training, and social activities to better serve the growing senior population...",
+      category: "Community"
     }
   ];
 
@@ -402,7 +465,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
         try {
           console.log(`Fetching articles for category ID: ${categoryId}, title: ${title}, path: ${location.pathname}`);
           const wpArticles = await fetchWithTimeout(
-            newsService.getLatestNewsByCategoryId(categoryId, 5)
+            newsService.getLatestNewsByCategoryId(categoryId, 18)
           );
           
           console.log('WordPress API response:', wpArticles);
