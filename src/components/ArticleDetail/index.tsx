@@ -12,7 +12,9 @@ import {
   IconButton,
   TextField,
   Skeleton,
-  CardMedia
+  CardMedia,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
@@ -245,6 +247,9 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
   const [comments, setComments] = useState<FormattedComment[]>([]);
   const [newComment, setNewComment] = useState({ name: '', email: '', website: '', comment: '' });
   const [saveInfo, setSaveInfo] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // Generate dynamic author info based on article data
   const generateAuthorInfo = (article: FormattedNewsArticle | null) => {
@@ -372,6 +377,23 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
     }
   ];
 
+  // Load saved user info from localStorage
+  useEffect(() => {
+    const savedName = localStorage.getItem('megaphone_comment_name');
+    const savedEmail = localStorage.getItem('megaphone_comment_email');
+    const savedWebsite = localStorage.getItem('megaphone_comment_website');
+    
+    if (savedName || savedEmail || savedWebsite) {
+      setNewComment({
+        name: savedName || '',
+        email: savedEmail || '',
+        website: savedWebsite || '',
+        comment: ''
+      });
+      setSaveInfo(true);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchArticleData = async () => {
       try {
@@ -443,7 +465,9 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                 month: 'long', 
                 day: 'numeric' 
               }),
-              avatarUrl: comment.author_avatar_urls['48'] || comment.author_avatar_urls['96'] || comment.author_avatar_urls['24'] || ''
+              avatarUrl: comment.author_avatar_urls['48'] || comment.author_avatar_urls['96'] || comment.author_avatar_urls['24'] || '',
+              authorUrl: comment.author_url || undefined,
+              status: comment.status
             }));
             setComments(formattedComments);
             console.log(`Successfully loaded ${formattedComments.length} comments for article ${currentArticleId}`);
@@ -456,7 +480,9 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
               authorName: comment.author,
               content: comment.post,
               date: comment.date || 'March 15, 2024',
-              avatarUrl: ''
+              avatarUrl: '',
+              authorUrl: undefined, // Fallback comments don't have website URLs
+              status: 'approve' // Fallback comments are treated as approved
             }));
             setComments(fallbackComments);
           }
@@ -495,23 +521,82 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
     }
   };
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In real implementation, submit comment to WordPress API
-    const comment: FormattedComment = {
-      id: Date.now(), // Temporary ID for client-side comment
-      postId: article?.id || 0,
-      authorName: newComment.name,
-      content: newComment.comment,
-      date: new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      }),
-      avatarUrl: ''
-    };
-    setComments([comment, ...comments]);
-    setNewComment({ name: '', email: '', website: '', comment: '' });
+    
+    if (!article) {
+      setSubmitError('Article not found');
+      return;
+    }
+
+    setSubmitLoading(true);
+    setSubmitError(null);
+    setSubmitSuccess(false);
+
+    try {
+      const newsService = WordPressNewsService.getInstance();
+      
+      const submittedComment = await newsService.submitComment(
+        article.id,
+        newComment.name,
+        newComment.email,
+        newComment.comment,
+        newComment.website || undefined
+      );
+
+      if (submittedComment) {
+        // Convert WordPress comment to our FormattedComment format
+        const formattedComment: FormattedComment = {
+          id: submittedComment.id,
+          postId: submittedComment.post,
+          authorName: submittedComment.author_name,
+          content: submittedComment.content.rendered.replace(/<[^>]*>/g, ''), // Strip HTML
+          date: new Date(submittedComment.date).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          avatarUrl: submittedComment.author_avatar_urls['48'] || submittedComment.author_avatar_urls['96'] || submittedComment.author_avatar_urls['24'] || '',
+          authorUrl: submittedComment.author_url || undefined,
+          status: submittedComment.status
+        };
+
+        // Add comment to the list (usually goes to moderation first)
+        setComments([formattedComment, ...comments]);
+        setSubmitSuccess(true);
+        setNewComment({ name: '', email: '', website: '', comment: '' });
+        
+        // Save user info if requested
+        if (saveInfo) {
+          localStorage.setItem('megaphone_comment_name', newComment.name);
+          localStorage.setItem('megaphone_comment_email', newComment.email);
+          localStorage.setItem('megaphone_comment_website', newComment.website);
+        }
+
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setSubmitSuccess(false);
+        }, 5000);
+
+        console.log('Comment submitted successfully:', formattedComment);
+      } else {
+        throw new Error('Failed to submit comment');
+      }
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      if (error instanceof Error) {
+        setSubmitError(error.message);
+      } else {
+        setSubmitError('Failed to submit comment. Please try again.');
+      }
+      
+      // Clear error message after 10 seconds
+      setTimeout(() => {
+        setSubmitError(null);
+      }, 10000);
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
   const handleRelatedClick = (relatedArticle: FormattedNewsArticle) => {
@@ -767,12 +852,44 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                         </Avatar>
                         <Box sx={{ flex: 1 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                            <Typography variant="subtitle2" fontWeight={600}>
-                              {comment.authorName}
-                            </Typography>
+                            {comment.authorUrl ? (
+                              <Typography 
+                                variant="subtitle2" 
+                                fontWeight={600}
+                                component="a"
+                                href={comment.authorUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ 
+                                  color: '#c60800',
+                                  textDecoration: 'none',
+                                  '&:hover': {
+                                    textDecoration: 'underline'
+                                  }
+                                }}
+                              >
+                                {comment.authorName}
+                              </Typography>
+                            ) : (
+                              <Typography variant="subtitle2" fontWeight={600}>
+                                {comment.authorName}
+                              </Typography>
+                            )}
                             <Typography variant="caption" color="text.secondary">
                               {comment.date}
                             </Typography>
+                            {comment.status === 'hold' && (
+                              <Chip 
+                                label="Awaiting Moderation" 
+                                size="small" 
+                                sx={{ 
+                                  backgroundColor: '#fff3cd',
+                                  color: '#856404',
+                                  fontSize: '0.7rem',
+                                  height: 20
+                                }}
+                              />
+                            )}
                           </Box>
                           <Typography variant="body2">
                             {comment.content}
@@ -798,6 +915,20 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   Your email address will not be published. Required fields are marked <span style={{ color: 'red' }}>*</span>
                 </Typography>
+                
+                {/* Success Message */}
+                {submitSuccess && (
+                  <Alert severity="success" sx={{ mb: 3 }}>
+                    Comment submitted successfully! Your comment is awaiting moderation and will appear once approved.
+                  </Alert>
+                )}
+                
+                {/* Error Message */}
+                {submitError && (
+                  <Alert severity="error" sx={{ mb: 3 }}>
+                    {submitError}
+                  </Alert>
+                )}
                 <Box component="form" onSubmit={handleCommentSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <TextField
                     placeholder="Name"
@@ -874,6 +1005,8 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                   <Button 
                     type="submit" 
                     variant="contained" 
+                    disabled={submitLoading}
+                    startIcon={submitLoading ? <CircularProgress size={20} color="inherit" /> : null}
                     sx={{ 
                       alignSelf: 'flex-start',
                       backgroundColor: '#c60800',
@@ -884,10 +1017,14 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                       fontWeight: 700,
                       '&:hover': {
                         backgroundColor: '#a00600'
+                      },
+                      '&:disabled': {
+                        backgroundColor: '#999',
+                        color: 'white'
                       }
                     }}
                   >
-                    ADD COMMENT
+                    {submitLoading ? 'SUBMITTING...' : 'ADD COMMENT'}
                   </Button>
                 </Box>
               </Card>
