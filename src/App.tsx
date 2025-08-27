@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import Homepage from './components/Homepage';
 import LocalNews from './components/LocalNews';
 import ArticleDetail from './components/ArticleDetail';
+import SearchResults from './components/SearchResults';
 
 const App: React.FC = () => {
   return (
@@ -72,6 +73,9 @@ const App: React.FC = () => {
             
             {/* Additional routes */}
             <Route path="/coming-up" element={<LocalNews />} />
+            
+            {/* Search Route */}
+            <Route path="/search" element={<SearchResults />} />
             
             {/* Article Detail Route */}
             <Route path="/article/:id" element={<ArticleDetail />} />

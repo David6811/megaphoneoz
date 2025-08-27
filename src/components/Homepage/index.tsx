@@ -355,10 +355,17 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           <aside className="sidebar">
             {/* Search */}
             <div className="sidebar-section">
-              <div className="search-bar">
-                <input type="text" placeholder="Search" />
+              <form className="search-bar" onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const searchTerm = formData.get('search') as string;
+                if (searchTerm?.trim()) {
+                  navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+                }
+              }}>
+                <input type="text" name="search" placeholder="Search articles..." />
                 <button type="submit">🔍</button>
-              </div>
+              </form>
             </div>
 
             {/* Follow Us */}
