@@ -1,5 +1,6 @@
 import React from 'react';
 import './Sidebar.css';
+import { SimpleAuthSidebar } from '../Auth/SimpleAuthSidebar';
 
 interface Comment {
   author: string;
@@ -68,6 +69,9 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
           <a href="https://www.youtube.com/channel/UCsp_yc-87m1D5BnUYCoxTAw" target="_blank" rel="noopener noreferrer" className="social-icon youtube">▶</a>
         </div>
       </div>
+
+      {/* Auth Section */}
+      <SimpleAuthSidebar />
 
       {/* Featured Video */}
       <div className="sidebar-section">
