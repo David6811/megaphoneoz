@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import FeaturedSlider from '../FeaturedSlider';
 import { HomepageProps, SlideData, Article, Comment } from '../../types';
 import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import { SimpleAuthSidebar } from '../Auth/SimpleAuthSidebar';
 import './Homepage.css';
 
 const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
@@ -379,6 +380,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
                 <a href="https://www.youtube.com/channel/UCsp_yc-87m1D5BnUYCoxTAw" target="_blank" rel="noopener noreferrer" className="social-icon youtube">▶</a>
               </div>
             </div>
+
+            {/* Auth Section */}
+            <SimpleAuthSidebar />
 
 
             {/* Recent Articles */}
