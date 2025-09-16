@@ -20,9 +20,9 @@
       var search = location.search;
       var hash = location.hash;
       
-      if (path !== '/') {
+      if (path !== '/megaphoneoz/' && path !== '/megaphoneoz') {
         sessionStorage.redirect = location.href;
-        location.replace('/' + (search ? search + '&' : '?') + 'redirect=' + encodeURIComponent(path + search + hash));
+        location.replace('/megaphoneoz/' + (search ? search + '&' : '?') + 'redirect=' + encodeURIComponent(path + search + hash));
       }
     </script>
   </body>
