@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
+import { supabase } from '../../config/supabase';
 import { Article } from '../../types';
 import NewsCard from '../NewsCard';
 
@@ -49,19 +50,58 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
 
   const query = searchParams.get('q') || '';
 
-  // Transform WordPress news data to component format
-  const transformNewsData = (wpArticles: FormattedNewsArticle[]): Article[] => {
-    return wpArticles.map(article => ({
-      id: article.id,
-      title: article.title,
-      date: article.date,
-      image: article.image,
-      excerpt: article.excerpt,
-      comments: 0, // WordPress search doesn't provide comment count
-      category: article.category || 'News',
-      content: article.excerpt, // Use excerpt as content for search results
-      author: article.author // Use WordPressAuthor object from API or undefined
-    }));
+  // Transform WordPress news data to component format with comment counts from Supabase
+  const transformNewsData = async (wpArticles: FormattedNewsArticle[]): Promise<Article[]> => {
+    // Fetch comment counts for all articles at once
+    const articleIds = wpArticles.map(article => article.id);
+    
+    try {
+      const { data: commentCounts, error } = await supabase
+        .from('comments')
+        .select('post_id')
+        .in('post_id', articleIds)
+        .eq('status', 'approved');
+
+      if (error) {
+        console.error('Error fetching comment counts for search results:', error);
+      }
+
+      // Count comments per article
+      const commentCountMap: { [key: number]: number } = {};
+      if (commentCounts) {
+        commentCounts.forEach(comment => {
+          commentCountMap[comment.post_id] = (commentCountMap[comment.post_id] || 0) + 1;
+        });
+      }
+
+      return wpArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        image: article.image,
+        excerpt: article.excerpt,
+        comments: commentCountMap[article.id] || 0,
+        commentCount: commentCountMap[article.id] || 0,
+        category: article.category || 'News',
+        content: article.excerpt, // Use excerpt as content for search results
+        author: article.author // Use WordPressAuthor object from API or undefined
+      }));
+    } catch (error) {
+      console.error('Error transforming search results with comment counts:', error);
+      // Fallback to original transformation without comment counts
+      return wpArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        image: article.image,
+        excerpt: article.excerpt,
+        comments: 0,
+        commentCount: 0,
+        category: article.category || 'News',
+        content: article.excerpt,
+        author: article.author
+      }));
+    }
   };
 
   // Perform search
@@ -86,11 +126,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
       );
 
       if (searchResults && searchResults.length > 0) {
-        const transformedResults = transformNewsData(searchResults);
+        const transformedResults = await transformNewsData(searchResults);
         setArticles(transformedResults);
         setTotalResults(transformedResults.length);
         setTotalPages(Math.ceil(transformedResults.length / articlesPerPage));
-        console.log(`Found ${transformedResults.length} search results`);
+        console.log(`Found ${transformedResults.length} search results with comment counts`);
       } else {
         setArticles([]);
         setTotalResults(0);
@@ -233,7 +273,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
                   excerpt={article.excerpt}
                   image={article.image}
                   date={article.date}
-                  comments={article.commentCount || 0}
+                  comments={article.comments || 0}
                   onClick={() => handleArticleClick(article)}
                 />
               ))}

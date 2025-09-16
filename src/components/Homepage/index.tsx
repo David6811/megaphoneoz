@@ -108,8 +108,8 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     }
   ];
 
-  // Transform WordPress news data to component format
-  const transformNewsData = (wpArticles: FormattedNewsArticle[]): { slides: SlideData[], articles: Article[] } => {
+  // Transform WordPress news data to component format with comment counts from Supabase
+  const transformNewsData = async (wpArticles: FormattedNewsArticle[]): Promise<{ slides: SlideData[], articles: Article[] }> => {
     const slides: SlideData[] = wpArticles.slice(0, 5).map(article => ({
       id: article.id,
       title: article.title,
@@ -118,20 +118,62 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       category: article.category
     }));
 
-    // For NEWS section: 1 featured article + 3 sidebar articles = 4 total
-    const articles: Article[] = wpArticles.slice(0, 4).map(article => ({
-      id: article.id,
-      title: article.title,
-      date: article.date,
-      image: article.image,
-      excerpt: article.excerpt,
-      comments: 0, // WordPress doesn't provide comment count in this endpoint
-      category: article.category,
-      content: article.content,
-      author: article.author
-    }));
+    // Get the first 4 articles for NEWS section
+    const newsArticles = wpArticles.slice(0, 4);
+    const articleIds = newsArticles.map(article => article.id);
 
-    return { slides, articles };
+    try {
+      // Fetch comment counts for all news articles at once
+      const { data: commentCounts, error } = await supabase
+        .from('comments')
+        .select('post_id')
+        .in('post_id', articleIds)
+        .eq('status', 'approved');
+
+      if (error) {
+        console.error('Error fetching comment counts for homepage news:', error);
+      }
+
+      // Count comments per article
+      const commentCountMap: { [key: number]: number } = {};
+      if (commentCounts) {
+        commentCounts.forEach(comment => {
+          commentCountMap[comment.post_id] = (commentCountMap[comment.post_id] || 0) + 1;
+        });
+      }
+
+      const articles: Article[] = newsArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        image: article.image,
+        excerpt: article.excerpt,
+        comments: commentCountMap[article.id] || 0,
+        commentCount: commentCountMap[article.id] || 0,
+        category: article.category,
+        content: article.content,
+        author: article.author
+      }));
+
+      return { slides, articles };
+    } catch (error) {
+      console.error('Error transforming homepage news with comment counts:', error);
+      // Fallback to original transformation without comment counts
+      const articles: Article[] = newsArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        image: article.image,
+        excerpt: article.excerpt,
+        comments: 0,
+        commentCount: 0,
+        category: article.category,
+        content: article.content,
+        author: article.author
+      }));
+
+      return { slides, articles };
+    }
   };
 
   // Fetch WordPress news data
@@ -167,10 +209,10 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           );
           
           if (wpArticles && wpArticles.length > 0 && !isCancelled) {
-            const { slides, articles } = transformNewsData(wpArticles);
+            const { slides, articles } = await transformNewsData(wpArticles);
             setFeaturedArticles(slides);
             setNewsArticles(articles);
-            console.log('Successfully loaded WordPress news articles:', wpArticles.length);
+            console.log('Successfully loaded WordPress news articles with comment counts:', wpArticles.length);
           } else if (!isCancelled) {
             console.warn('No WordPress articles found, keeping fallback data');
           }
@@ -333,22 +375,6 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     { author: "bob", post: "REVIEW: GASLIGHT AT ROSLYN PACKER THEATRE, SYDNEY" }
   ];
 
-  const bestOfRest: string[] = [
-    "Why the press is losing",
-    "The Cambridge Analytica Files",
-    "Lies spread faster than truth",
-    "The future of journalism",
-    "Facebook's two years of hell",
-    "Social confidence crucial to democracy",
-    "Freakorn",
-    "Is fake news political persuasion?",
-    "Long live the moguls",
-    "The New Fourth Estate",
-    "Snow Fall",
-    "Funding attacks on climate science",
-    "Journos onTwitter",
-    "Arctic sea ice melts"
-  ];
 
   const handleArticleClick = (article: Article) => {
     // Pass the full article data via state instead of just slug
@@ -519,15 +545,6 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               </ul>
             </div>
 
-            {/* Best of the Rest */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">BEST OF THE REST</h3>
-              <ul className="best-of-list">
-                {bestOfRest.map((item: string, index: number) => (
-                  <li key={index} style={{ display: 'flex', alignItems: 'center' }}><img src="https://megaphoneoz.com/wp-content/uploads/2015/05/MegaphoneGravatar.jpg" alt="Megaphone Icon" style={{ width: 16, height: 16, marginRight: 8 }} /><a href="/news" role="button" tabIndex={0}>{item}</a></li>
-                ))}
-              </ul>
-            </div>
           </aside>
         </div>
       </div>

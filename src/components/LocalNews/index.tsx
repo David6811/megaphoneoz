@@ -4,6 +4,7 @@ import { styled } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
 import NewsServiceManager, { FormattedNewsArticle, FormattedComment } from '../../services/newsServiceManager';
 import { Article, Comment } from '../../types';
+import { supabase } from '../../config/supabase';
 import NewsCard from '../NewsCard';
 
 // Styled components following Material-First strategy
@@ -130,6 +131,7 @@ interface LocalNewsProps {
 
 const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [recentArticles, setRecentArticles] = useState<{id: number, title: string}[]>([]);
   const [recentComments, setRecentComments] = useState<FormattedComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -321,14 +323,14 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
     }
   ];
 
-  const recentArticles: string[] = [
-    "COUNCIL APPROVES NEW COMMUNITY CENTER PROJECT",
-    "LOCAL SCHOOLS REPORT INCREASED ENROLLMENT",
-    "FARMERS MARKET EXPANDS TO WEEKEND OPERATION",
-    "ROAD CONSTRUCTION PROJECT BEGINS NEXT MONTH",
-    "NEW LIBRARY BRANCH OPENS IN WESTERN DISTRICT",
-    "LOCAL BUSINESS ASSOCIATION HOSTS NETWORKING EVENT",
-    "COMMUNITY GARDEN PROJECT SEEKS VOLUNTEERS"
+  const fallbackRecentArticles: {id: number, title: string}[] = [
+    { id: 1, title: "COUNCIL APPROVES NEW COMMUNITY CENTER PROJECT" },
+    { id: 2, title: "LOCAL SCHOOLS REPORT INCREASED ENROLLMENT" },
+    { id: 3, title: "FARMERS MARKET EXPANDS TO WEEKEND OPERATION" },
+    { id: 4, title: "ROAD CONSTRUCTION PROJECT BEGINS NEXT MONTH" },
+    { id: 5, title: "NEW LIBRARY BRANCH OPENS IN WESTERN DISTRICT" },
+    { id: 6, title: "LOCAL BUSINESS ASSOCIATION HOSTS NETWORKING EVENT" },
+    { id: 7, title: "COMMUNITY GARDEN PROJECT SEEKS VOLUNTEERS" }
   ];
 
   const fallbackRecentComments: Comment[] = [
@@ -390,6 +392,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
       // Start with fallback data immediately
       if (!isCancelled) {
         setArticles(fallbackArticles);
+        setRecentArticles(fallbackRecentArticles);
         setTotalPages(Math.ceil(fallbackArticles.length / articlesPerPage));
         setLoading(false);
       }
@@ -477,8 +480,38 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
       }
     };
 
+    // Fetch recent articles from Supabase
+    const fetchRecentArticles = async () => {
+      try {
+        console.log('📰 LocalNews: Fetching Recent Articles from Supabase...');
+        
+        const { data: recentPosts, error: recentError } = await supabase
+          .from('posts')
+          .select('id, title')
+          .eq('status', 'publish')
+          .order('created_at', { ascending: false })
+          .limit(7);
+
+        if (!recentError && recentPosts && recentPosts.length > 0 && !isCancelled) {
+          const recentArticlesData = recentPosts.map(post => ({
+            id: post.id,
+            title: post.title
+          }));
+          setRecentArticles(recentArticlesData);
+          console.log('📰 LocalNews: Successfully loaded Recent Articles from Supabase:', recentArticlesData.length);
+        } else if (!isCancelled) {
+          console.warn('📰 LocalNews: No recent articles found in Supabase, keeping fallback data');
+        }
+      } catch (recentError) {
+        if (!isCancelled) {
+          console.error('📰 LocalNews: Error loading Recent Articles (using fallback):', recentError);
+        }
+      }
+    };
+
     fetchCategoryNews();
     fetchRecentComments();
+    fetchRecentArticles();
     
     return () => {
       isCancelled = true;
@@ -637,7 +670,26 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
               <RecentList>
                 {recentArticles.map((article, index) => (
                   <li key={index}>
-                    <Box component="button" sx={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left', p: 0, fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'inherit' }}>{article}</Box>
+                    <Box 
+                      component="button" 
+                      onClick={() => navigate(`/article/${article.id}`)}
+                      sx={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: 'inherit', 
+                        cursor: 'pointer', 
+                        textAlign: 'left', 
+                        p: 0, 
+                        fontSize: 'inherit', 
+                        lineHeight: 'inherit', 
+                        fontFamily: 'inherit',
+                        '&:hover': {
+                          color: 'primary.main'
+                        }
+                      }}
+                    >
+                      {article.title}
+                    </Box>
                   </li>
                 ))}
               </RecentList>
