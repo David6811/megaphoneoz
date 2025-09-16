@@ -12,6 +12,8 @@ import Homepage from './components/Homepage';
 import LocalNews from './components/LocalNews';
 import ArticleDetail from './components/ArticleDetail';
 import SearchResults from './components/SearchResults';
+import SupabaseTest from './components/SupabaseTest';
+import CategoryPage from './components/CategoryPage';
 
 const App: React.FC = () => {
   return (
@@ -26,56 +28,39 @@ const App: React.FC = () => {
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/contact-us" element={<ContactUs />} />
             
-            {/* WordPress-style category routes */}
-            <Route path="/category/news/localnews" element={<LocalNews />} />
-            <Route path="/category/news/nationalnews" element={<LocalNews />} />
-            <Route path="/category/news/worldnews" element={<LocalNews />} />
-            <Route path="/category/news/featurednews/" element={<LocalNews />} />
-            <Route path="/category/news/environment" element={<LocalNews />} />
-            <Route path="category/media/" element={<LocalNews />} />
+            {/* News Category Routes */}
+            <Route path="/news/:subcategory" element={<CategoryPage />} />
             
-            {/* Lifestyle Routes - All navigate to LocalNews component */}
-            <Route path="/category/lifestyle/foodwine/restaurantreviews" element={<LocalNews />} />
-            <Route path="/category/lifestyle/foodwine/winematch/" element={<LocalNews />} />
-            <Route path="/lifestyle/food-wine/wine-match" element={<LocalNews />} />
-            <Route path="/category/lifestyle/sport/" element={<LocalNews />} />
-            <Route path="/category/lifestyle/travel/" element={<LocalNews />} />
+            {/* Lifestyle Category Routes */}
+            <Route path="/lifestyle/:subcategory" element={<CategoryPage />} />
+            <Route path="/lifestyle/:subcategory/:subsubcategory" element={<CategoryPage />} />
             
-            {/* WordPress-style category routes for Lifestyle */}
-            <Route path="/category/lifestyle/food-wine" element={<LocalNews />} />
-            <Route path="/category/lifestyle/sport" element={<LocalNews />} />
-            <Route path="/category/lifestyle/travel" element={<LocalNews />} />
+            {/* Arts and Entertainment Category Routes */}
+            <Route path="/arts/:subcategory" element={<CategoryPage />} />
+            <Route path="/arts/:subcategory/:subsubcategory" element={<CategoryPage />} />
             
-            {/* Arts and Entertainment Routes - All navigate to LocalNews component */}
-            <Route path="/category/artsentertainment/theatre/theatrereviews/" element={<LocalNews />} />
-            <Route path="/arts/theatre/reviews" element={<LocalNews />} />
-            <Route path="/arts/film" element={<LocalNews />} />
-            <Route path="/arts/music" element={<LocalNews />} />
-            <Route path="/arts/galleries" element={<LocalNews />} />
-            <Route path="/arts/galleries/exhibitions" element={<LocalNews />} />
-            <Route path="/arts/galleries/eye-on-the-street" element={<LocalNews />} />
-            <Route path="/arts/books" element={<LocalNews />} />
-            <Route path="/arts/drawn-and-quartered" element={<LocalNews />} />
+            {/* Opinion Route */}
+            <Route path="/opinion" element={<CategoryPage title="Opinion" description="Editorial content and opinion pieces" />} />
             
-            {/* WordPress-style category routes for Arts & Entertainment */}
-            <Route path="/category/arts-entertainment/theatre" element={<LocalNews />} />
-            <Route path="/category/artsentertainment/filmreviews/" element={<LocalNews />} />
-            <Route path="/category/artsentertainment/musicreviews/" element={<LocalNews />} />
-            <Route path="/category/artsentertainment/galleries/exhibitions/" element={<LocalNews />} />
-            <Route path="/category/artsentertainment/galleries/eyeonthestreet/" element={<LocalNews />} />
-            <Route path="/category/artsentertainment/books/" element={<LocalNews />} />
-            <Route path="/drawn-and-quartered/" element={<LocalNews />} />
-
+            {/* Legacy/Special Routes */}
+            <Route path="/localnews" element={<CategoryPage title="Local News" description="Local news and community updates" />} />
             
-            
-            {/* Opinion Route - Direct navigation to LocalNews component */}
-            <Route path="/category/opinion/" element={<LocalNews />} />
+            {/* Legacy WordPress-style routes for backward compatibility */}
+            <Route path="/category/news/:subcategory" element={<CategoryPage />} />
+            <Route path="/category/lifestyle/:subcategory" element={<CategoryPage />} />
+            <Route path="/category/lifestyle/:subcategory/:subsubcategory" element={<CategoryPage />} />
+            <Route path="/category/artsentertainment/:subcategory" element={<CategoryPage />} />
+            <Route path="/category/artsentertainment/:subcategory/:subsubcategory" element={<CategoryPage />} />
+            <Route path="/category/opinion" element={<CategoryPage title="Opinion" description="Editorial content and opinion pieces" />} />
             
             {/* Additional routes */}
             <Route path="/coming-up" element={<LocalNews />} />
             
             {/* Search Route */}
             <Route path="/search" element={<SearchResults />} />
+            
+            {/* Supabase Test Route */}
+            <Route path="/test-supabase" element={<SupabaseTest />} />
             
             {/* Article Detail Route */}
             <Route path="/article/:id" element={<ArticleDetail />} />

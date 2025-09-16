@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ImageGallerySlider from '../ImageGallerySlider';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
 import './Footer.css';
 
 interface GalleryImage {
@@ -134,7 +134,7 @@ const Footer: React.FC = () => {
         // Delay footer loading by 2 seconds to avoid concurrent requests
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const newsService = WordPressNewsService.getInstance();
+        const newsService = NewsServiceManager.getInstance();
         const articles = await newsService.getLatestNewsForSlider(10);
         
         if (articles && articles.length > 0) {

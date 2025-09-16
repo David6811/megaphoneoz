@@ -12,6 +12,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
+  const [searchTerm, setSearchTerm] = React.useState('')
+
   const recentArticles: string[] = [
     "REVIEW: HAIRSPRAY",
     "BACH ETERNAL PLAYS ON",
@@ -30,37 +32,34 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
     { author: "bob", post: "REVIEW: GASLIGHT AT ROSLYN PACKER THEATRE, SYDNEY" }
   ];
 
-  const bestOfRest: string[] = [
-    "Why the press is losing",
-    "The Cambridge Analytica Files",
-    "Lies spread faster than truth",
-    "The future of journalism",
-    "Facebook's two years of hell",
-    "Social confidence crucial to democracy",
-    "Freakorn",
-    "Is fake news political persuasion?",
-    "Long live the moguls",
-    "The New Fourth Estate",
-    "Snow Fall",
-    "Funding attacks on climate science",
-    "Journos onTwitter",
-    "Arctic sea ice melts"
-  ];
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchTerm.trim()) {
+      // Navigate to search results page or filter content
+      window.location.href = `/search?q=${encodeURIComponent(searchTerm.trim())}`
+    }
+  }
+
 
   return (
     <aside className={`sidebar ${className}`}>
       {/* Search */}
       <div className="sidebar-section">
-        <h3 className="sidebar-title">SEARCH</h3>
-        <div className="search-bar">
-          <input type="text" placeholder="Search..." />
+        <h3 className="sidebar-title">Search</h3>
+        <form className="search-bar" onSubmit={handleSearch}>
+          <input 
+            type="text" 
+            placeholder="Search..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <button type="submit">🔍</button>
-        </div>
+        </form>
       </div>
 
       {/* Follow Us */}
       <div className="sidebar-section">
-        <h3 className="sidebar-title">FOLLOW US</h3>
+        <h3 className="sidebar-title">Follow Us</h3>
         <div className="social-icons">
           <a href="http://www.facebook.com/MegaphoneOz" target="_blank" rel="noopener noreferrer" className="social-icon facebook">f</a>
           <a href="https://www.flickr.com/photos/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon flickr">fl</a>
@@ -73,20 +72,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
       {/* Auth Section */}
       <SimpleAuthSidebar />
 
-      {/* Featured Video */}
-      <div className="sidebar-section">
-        <h3 className="sidebar-title">JAYA BALENDRA: EXPOSED LUNA PARK GHOST TRAIN FIRE</h3>
-        <div className="video-player">
-          <div className="video-thumbnail">
-            <img src="https://picsum.photos/300/200?random=10" alt="Video thumbnail" />
-            <div className="play-button">▶</div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Recent Articles */}
       <div className="sidebar-section">
-        <h3 className="sidebar-title">RECENT ARTICLES</h3>
+        <h3 className="sidebar-title">Recent Articles</h3>
         <ul className="recent-list">
           {recentArticles.map((article: string, index: number) => (
             <li key={index}><a href="/articles" role="button" tabIndex={0}>{article}</a></li>
@@ -96,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
 
       {/* Recent Comments */}
       <div className="sidebar-section">
-        <h3 className="sidebar-title">RECENT COMMENTS</h3>
+        <h3 className="sidebar-title">Recent Comments</h3>
         <ul className="recent-comments">
           {recentComments.map((comment: Comment, index: number) => (
             <li key={index}>
@@ -106,18 +96,6 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
         </ul>
       </div>
 
-      {/* Best of the Rest */}
-      <div className="sidebar-section">
-        <h3 className="sidebar-title">BEST OF THE REST</h3>
-        <ul className="best-of-list">
-          {bestOfRest.map((item: string, index: number) => (
-            <li key={index}>📰 <a href="/news" role="button" tabIndex={0}>{item}</a></li>
-          ))}
-        </ul>
-        <div className="login-link">
-          <a href="/login" role="button" tabIndex={0}>MegaphoneOz Users: Login</a>
-        </div>
-      </div>
     </aside>
   );
 };

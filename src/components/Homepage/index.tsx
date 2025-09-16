@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FeaturedSlider from '../FeaturedSlider';
 import { HomepageProps, SlideData, Article, Comment } from '../../types';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
 import { SimpleAuthSidebar } from '../Auth/SimpleAuthSidebar';
 import './Homepage.css';
 
@@ -145,7 +145,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       }
       
       try {
-        const newsService = WordPressNewsService.getInstance();
+        const newsManager = NewsServiceManager.getInstance();
         
         // Add timeout to prevent hanging
         const fetchWithTimeout = async (promise: Promise<any>, timeoutMs: number = 8000) => {
@@ -158,7 +158,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
         // Fetch general news with timeout
         try {
           const wpArticles = await fetchWithTimeout(
-            newsService.getLatestNewsForSlider(9)
+            newsManager.getLatestNewsForSlider(9)
           );
           
           if (wpArticles && wpArticles.length > 0 && !isCancelled) {
@@ -176,7 +176,7 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
         // Fetch arts and entertainment articles with timeout
         try {
           const artsArticles = await fetchWithTimeout(
-            newsService.getLatestNewsByCategory('arts-entertainment', 4)
+            newsManager.getLatestNewsByCategory('arts-entertainment', 4)
           );
           
           if (artsArticles && artsArticles.length > 0 && !isCancelled) {

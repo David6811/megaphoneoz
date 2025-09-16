@@ -12,6 +12,7 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -49,7 +50,7 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
 
     try {
       const result = isSignUp 
-        ? await AuthService.signUp({ email, password })
+        ? await AuthService.signUp({ email, password, displayName })
         : await AuthService.signIn({ email, password })
       
       if (result.success) {
@@ -57,6 +58,7 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
         setEmail('')
         setPassword('')
         setConfirmPassword('')
+        setDisplayName('')
       } else {
         setMessage(result.message)
       }
@@ -83,8 +85,7 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
   if (user) {
     return (
       <div className={`sidebar-section ${className}`}>
-        <h3 className="sidebar-title">WELCOME BACK</h3>
-        <div style={{ padding: '15px', textAlign: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
           <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666' }}>
             {user.email}
           </p>
@@ -111,11 +112,10 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
 
   return (
     <div className={`sidebar-section ${className}`}>
-      <h3 className="sidebar-title">MEMBER LOGIN</h3>
-      
+      <h3 className="sidebar-title">Member Login</h3>
       {message && (
         <div style={{ 
-          padding: '5px 15px', 
+          padding: '5px 0', 
           fontSize: '12px', 
           color: message.includes('Success') ? 'green' : 'red',
           textAlign: 'center'
@@ -125,7 +125,7 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
       )}
       
       {!showLogin ? (
-        <div style={{ textAlign: 'center', padding: '10px' }}>
+        <div style={{ textAlign: 'center' }}>
           <button 
             onClick={() => setShowLogin(true)}
             style={{
@@ -143,7 +143,7 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
           </button>
         </div>
       ) : (
-        <div style={{ padding: '15px' }}>
+        <div>
           <form onSubmit={handleSubmit}>
             <input
               type="email"
@@ -159,6 +159,22 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
                 boxSizing: 'border-box'
               }}
             />
+            {isSignUp && (
+              <input
+                type="text"
+                placeholder="Display name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  marginBottom: '10px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            )}
             <input
               type="password"
               placeholder="Password"

@@ -11,6 +11,7 @@ export interface AuthResponse {
 export interface SignUpData {
   email: string
   password: string
+  displayName?: string
 }
 
 export interface SignInData {
@@ -24,6 +25,11 @@ export class AuthService {
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          data: {
+            display_name: data.displayName || '',
+          },
+        },
       })
 
       if (error) {

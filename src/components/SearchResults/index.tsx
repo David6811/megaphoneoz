@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
 import { Article } from '../../types';
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -119,7 +119,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
 
     setLoading(true);
     try {
-      const newsService = WordPressNewsService.getInstance();
+      const newsManager = NewsServiceManager.getInstance();
       
       // Add timeout to prevent hanging
       const fetchWithTimeout = async (promise: Promise<any>, timeoutMs: number = 8000) => {
@@ -131,7 +131,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
 
       console.log(`Searching for: "${searchTerm}"`);
       const searchResults = await fetchWithTimeout(
-        newsService.searchPosts(searchTerm, 18) // Get more results to support pagination
+        newsManager.searchPosts(searchTerm, 18) // Get more results to support pagination
       );
 
       if (searchResults && searchResults.length > 0) {

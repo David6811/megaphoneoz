@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Typography, Container } from '@mui/material';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
 
 interface NewsPageProps {
   category?: string;
@@ -15,7 +15,7 @@ const NewsPage: React.FC<NewsPageProps> = () => {
   useEffect(() => {
     const fetchCategoryNews = async () => {
       try {
-        const newsService = WordPressNewsService.getInstance();
+        const newsService = NewsServiceManager.getInstance();
         let categoryArticles: FormattedNewsArticle[] = [];
 
         if (category) {

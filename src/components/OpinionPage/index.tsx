@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Container } from '@mui/material';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
 
 const OpinionPage: React.FC = () => {
   const [articles, setArticles] = useState<FormattedNewsArticle[]>([]);
@@ -9,7 +9,7 @@ const OpinionPage: React.FC = () => {
   useEffect(() => {
     const fetchOpinionContent = async () => {
       try {
-        const newsService = WordPressNewsService.getInstance();
+        const newsService = NewsServiceManager.getInstance();
         const opinionArticles = await newsService.getLatestNewsByCategory('opinion', 10);
         setArticles(opinionArticles);
       } catch (error) {

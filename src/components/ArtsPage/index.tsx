@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Typography, Container } from '@mui/material';
-import WordPressNewsService, { FormattedNewsArticle } from '../../services/wordpressNewsService';
+import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
 
 const ArtsPage: React.FC = () => {
   const { category, subcategory } = useParams<{ category: string; subcategory?: string }>();
@@ -11,7 +11,7 @@ const ArtsPage: React.FC = () => {
   useEffect(() => {
     const fetchArtsContent = async () => {
       try {
-        const newsService = WordPressNewsService.getInstance();
+        const newsService = NewsServiceManager.getInstance();
         let categoryArticles: FormattedNewsArticle[] = [];
 
         // Try to get articles for arts and entertainment

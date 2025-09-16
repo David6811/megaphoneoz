@@ -8,8 +8,6 @@ import {
   Button, 
   Avatar, 
   Chip, 
-  Divider,
-  IconButton,
   TextField,
   Skeleton,
   CardMedia,
@@ -18,11 +16,8 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import EmailIcon from '@mui/icons-material/Email';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import WordPressNewsService, { FormattedNewsArticle, FormattedComment } from '../../services/wordpressNewsService';
+import NewsServiceManager, { FormattedNewsArticle, FormattedComment } from '../../services/newsServiceManager';
 import { Comment } from '../../types';
 
 const ArticleContainer = styled(Box)(({ theme }) => ({
@@ -217,20 +212,6 @@ const ArticleContent = styled(Box)(({ theme }) => ({
   },
 }));
 
-const AuthorCard = styled(Card)(({ theme }) => ({
-  marginTop: theme.spacing(4),
-  marginBottom: theme.spacing(4),
-  padding: theme.spacing(3),
-  backgroundColor: theme.palette.grey[50],
-}));
-
-const SocialShare = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2),
-  marginTop: theme.spacing(3),
-  marginBottom: theme.spacing(3),
-}));
 
 
 interface ArticleDetailProps {
@@ -261,21 +242,22 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
       initials: 'MO'
     };
 
-    // Use real WordPress author data if available
+    // Use real WordPress/Supabase author data if available
     if (article.author) {
       const author = article.author;
-      console.log('Using WordPress author data:', author);
+      console.log('Using author data:', author);
+      console.log('Author email:', author.email);
       console.log('Author avatar URLs:', author.avatar_urls);
       
       const authorInfo = {
         name: author.name.toUpperCase(),
-        email: `EMAIL AUTHOR`, // WordPress doesn't expose email in public API
+        email: author.email || 'MEGAPHONEOZ.DEV', // Show actual email
         bio: author.description || `${author.name} is a contributor to MegaphoneOZ, bringing you quality journalism and insightful coverage.`,
-        image: author.avatar_urls['96'] || author.avatar_urls['48'] || author.avatar_urls['24'] || '',
+        image: author.avatar_urls ? (author.avatar_urls['96'] || author.avatar_urls['48'] || author.avatar_urls['24']) : '',
         initials: author.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
       };
       
-      console.log('Generated author info:', authorInfo);
+      console.log('Generated author info with email:', authorInfo);
       return authorInfo;
     }
 
@@ -398,12 +380,12 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
     const fetchArticleData = async () => {
       try {
         setLoading(true);
-        const newsService = WordPressNewsService.getInstance();
+        const newsManager = NewsServiceManager.getInstance();
         
         // First try to get article data from WordPress API using the ID
         if (id) {
           console.log(`ArticleDetail: Fetching article ${id} from WordPress API`);
-          const wordpressArticle = await newsService.getPostById(parseInt(id));
+          const wordpressArticle = await newsManager.getPostById(parseInt(id));
           
           if (wordpressArticle) {
             console.log('ArticleDetail: Successfully fetched WordPress article:', wordpressArticle);
@@ -439,7 +421,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
         }
         
         // Always fetch related articles
-        const related = await newsService.getLatestNewsForSlider(4);
+        const related = await newsManager.getLatestNewsForSlider(4);
         setRelatedArticles(related.slice(0, 3));
         
         // Fetch real comments for this article after we have the article data
@@ -454,7 +436,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
         
         if (currentArticleId) {
           try {
-            const articleComments = await newsService.fetchCommentsByPostId(currentArticleId);
+            const articleComments = await newsManager.fetchCommentsByPostId(currentArticleId);
             const formattedComments: FormattedComment[] = articleComments.map(comment => ({
               id: comment.id,
               postId: comment.post,
@@ -502,24 +484,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
     navigate(-1);
   };
 
-  const handleShare = (platform: string) => {
-    if (!article) return;
-    
-    const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(article.title);
-    
-    switch (platform) {
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-        break;
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-        break;
-      case 'email':
-        window.location.href = `mailto:?subject=${text}&body=${url}`;
-        break;
-    }
-  };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -534,9 +498,9 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
     setSubmitSuccess(false);
 
     try {
-      const newsService = WordPressNewsService.getInstance();
+      const newsManager = NewsServiceManager.getInstance();
       
-      const submittedComment = await newsService.submitComment(
+      const submittedComment = await newsManager.submitComment(
         article.id,
         newComment.name,
         newComment.email,
@@ -669,8 +633,17 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
               Back to Articles
             </Button>
 
-            <ArticleHeader>
-              {/* Category and Date */}
+            {/* @ts-ignore - React 19 + MUI v7 compatibility issue */}
+            <Container 
+              maxWidth="md" 
+              sx={{ 
+                mb: 4,
+                '& > *': {
+                  mb: 2
+                }
+              }}
+            >
+              {/* @ts-ignore */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <Chip label={article.category} color="primary" size="small" />
                 <Typography variant="body2" color="text.secondary">
@@ -678,14 +651,13 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                 </Typography>
               </Box>
 
-              {/* Title */}
               <Typography 
                 variant="h3" 
                 component="h1" 
                 sx={{ 
                   fontFamily: '"Roboto", sans-serif',
                   fontWeight: 700, 
-                  fontSize: '25px', // Match WordPress
+                  fontSize: '25px',
                   color: '#444444',
                   lineHeight: 1.3,
                   marginBottom: '20px',
@@ -696,7 +668,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                 {article.title}
               </Typography>
 
-              {/* Author Info */}
+              {/* @ts-ignore */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                 <Avatar 
                   src={generateAuthorInfo(article).image} 
@@ -708,11 +680,31 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                   <Typography variant="body2" fontWeight={600}>
                     {generateAuthorInfo(article).name}
                   </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {generateAuthorInfo(article).email}
+                  </Typography>
                 </Box>
               </Box>
 
-              {/* Featured Image - removed because WordPress content already includes images in correct positions */}
-            </ArticleHeader>
+              {article.image && (
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  onLoad={() => console.log('Article image loaded successfully:', article.image)}
+                  onError={(e) => console.error('Article image failed to load:', article.image, e)}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '400px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    display: 'block'
+                  }}
+                />
+              )}
+              {!article.image && console.log('No article image found, article.image:', article.image)}
+            </Container>
 
             {/* Article Content */}
             <ArticleContent 
@@ -744,49 +736,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
                 }
               }}
             />
-
-            {/* Social Share */}
-            <SocialShare>
-              <Typography variant="body2" fontWeight={600}>
-                Share this article:
-              </Typography>
-              <IconButton onClick={() => handleShare('twitter')} color="primary">
-                <TwitterIcon />
-              </IconButton>
-              <IconButton onClick={() => handleShare('facebook')} color="primary">
-                <FacebookIcon />
-              </IconButton>
-              <IconButton onClick={() => handleShare('email')} color="primary">
-                <EmailIcon />
-              </IconButton>
-            </SocialShare>
-
-            <Divider sx={{ my: 4 }} />
-
-            {/* Author Card */}
-            <AuthorCard>
-              <CardContent>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
-                  ABOUT THE AUTHOR
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
-                  <Avatar 
-                    src={generateAuthorInfo(article).image}
-                    sx={{ width: 80, height: 80 }}
-                  >
-                    {generateAuthorInfo(article).initials}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h6" gutterBottom sx={{ color: '#c60800', fontWeight: 700 }}>
-                      {generateAuthorInfo(article).name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      {generateAuthorInfo(article).bio}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </AuthorCard>
 
             {/* Related Articles - moved below article content */}
             <Box sx={{ mt: 6, mb: 6 }}>

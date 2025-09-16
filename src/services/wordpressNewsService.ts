@@ -89,6 +89,7 @@ interface WordPressCategory {
 interface WordPressAuthor {
   id: number;
   name: string;
+  email?: string;
   url: string;
   description: string;
   link: string;
