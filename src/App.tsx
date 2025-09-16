@@ -44,6 +44,8 @@ const App: React.FC = () => {
             
             {/* Legacy/Special Routes */}
             <Route path="/localnews" element={<CategoryPage title="Local News" description="Local news and community updates" />} />
+            <Route path="/category/media" element={<CategoryPage title="Media" description="Media news and updates" />} />
+            <Route path="/drawn-and-quartered" element={<CategoryPage title="Drawn and Quartered" description="Comics and illustrated content" />} />
             
             {/* Legacy WordPress-style routes for backward compatibility */}
             <Route path="/category/news/:subcategory" element={<CategoryPage />} />
