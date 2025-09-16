@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import FeaturedSlider from '../FeaturedSlider';
 import { HomepageProps, SlideData, Article, Comment } from '../../types';
 import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
+import { supabase } from '../../config/supabase';
 import { SimpleAuthSidebar } from '../Auth/SimpleAuthSidebar';
 import './Homepage.css';
 
@@ -11,6 +12,8 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
   const [featuredArticles, setFeaturedArticles] = useState<SlideData[]>([]);
   const [newsArticles, setNewsArticles] = useState<Article[]>([]);
   const [artsArticles, setArtsArticles] = useState<Article[]>([]);
+  const [recentArticles, setRecentArticles] = useState<{id: number, title: string}[]>([]);
+  const [recentComments, setRecentComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fallback data
@@ -105,8 +108,8 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     }
   ];
 
-  // Transform WordPress news data to component format
-  const transformNewsData = (wpArticles: FormattedNewsArticle[]): { slides: SlideData[], articles: Article[] } => {
+  // Transform WordPress news data to component format with comment counts from Supabase
+  const transformNewsData = async (wpArticles: FormattedNewsArticle[]): Promise<{ slides: SlideData[], articles: Article[] }> => {
     const slides: SlideData[] = wpArticles.slice(0, 5).map(article => ({
       id: article.id,
       title: article.title,
@@ -115,20 +118,62 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
       category: article.category
     }));
 
-    // For NEWS section: 1 featured article + 3 sidebar articles = 4 total
-    const articles: Article[] = wpArticles.slice(0, 4).map(article => ({
-      id: article.id,
-      title: article.title,
-      date: article.date,
-      image: article.image,
-      excerpt: article.excerpt,
-      comments: 0, // WordPress doesn't provide comment count in this endpoint
-      category: article.category,
-      content: article.content,
-      author: article.author
-    }));
+    // Get the first 4 articles for NEWS section
+    const newsArticles = wpArticles.slice(0, 4);
+    const articleIds = newsArticles.map(article => article.id);
 
-    return { slides, articles };
+    try {
+      // Fetch comment counts for all news articles at once
+      const { data: commentCounts, error } = await supabase
+        .from('comments')
+        .select('post_id')
+        .in('post_id', articleIds)
+        .eq('status', 'approved');
+
+      if (error) {
+        console.error('Error fetching comment counts for homepage news:', error);
+      }
+
+      // Count comments per article
+      const commentCountMap: { [key: number]: number } = {};
+      if (commentCounts) {
+        commentCounts.forEach(comment => {
+          commentCountMap[comment.post_id] = (commentCountMap[comment.post_id] || 0) + 1;
+        });
+      }
+
+      const articles: Article[] = newsArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        image: article.image,
+        excerpt: article.excerpt,
+        comments: commentCountMap[article.id] || 0,
+        commentCount: commentCountMap[article.id] || 0,
+        category: article.category,
+        content: article.content,
+        author: article.author
+      }));
+
+      return { slides, articles };
+    } catch (error) {
+      console.error('Error transforming homepage news with comment counts:', error);
+      // Fallback to original transformation without comment counts
+      const articles: Article[] = newsArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        image: article.image,
+        excerpt: article.excerpt,
+        comments: 0,
+        commentCount: 0,
+        category: article.category,
+        content: article.content,
+        author: article.author
+      }));
+
+      return { slides, articles };
+    }
   };
 
   // Fetch WordPress news data
@@ -141,6 +186,8 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
         setFeaturedArticles(fallbackFeaturedArticles);
         setNewsArticles(fallbackNewsArticles);
         setArtsArticles(fallbackArtsArticles);
+        setRecentArticles(fallbackRecentArticles);
+        setRecentComments(fallbackRecentComments);
         setLoading(false);
       }
       
@@ -162,10 +209,10 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           );
           
           if (wpArticles && wpArticles.length > 0 && !isCancelled) {
-            const { slides, articles } = transformNewsData(wpArticles);
+            const { slides, articles } = await transformNewsData(wpArticles);
             setFeaturedArticles(slides);
             setNewsArticles(articles);
-            console.log('Successfully loaded WordPress news articles:', wpArticles.length);
+            console.log('Successfully loaded WordPress news articles with comment counts:', wpArticles.length);
           } else if (!isCancelled) {
             console.warn('No WordPress articles found, keeping fallback data');
           }
@@ -173,32 +220,124 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           console.error('Error loading WordPress news (using fallback):', newsError);
         }
 
-        // Fetch arts and entertainment articles with timeout
+        // Fetch arts and entertainment articles from multiple categories
         try {
-          const artsArticles = await fetchWithTimeout(
-            newsManager.getLatestNewsByCategory('arts-entertainment', 4)
-          );
+          console.log('🎨 Fetching Arts & Entertainment articles from Supabase...');
           
-          if (artsArticles && artsArticles.length > 0 && !isCancelled) {
-            const transformedArtsArticles: Article[] = artsArticles.map((article: FormattedNewsArticle) => ({
+          // List of arts categories to try (matching menu structure)
+          const artsCategories = [
+            'games',
+            'theatre', 
+            'film',
+            'music',
+            'galleries',
+            'books',
+            'reviews', // This exists in Supabase
+            'drawn-and-quartered'
+          ];
+          
+          let allArtsArticles: FormattedNewsArticle[] = [];
+          
+          // Try to fetch from each category
+          for (const category of artsCategories) {
+            try {
+              const categoryArticles = await fetchWithTimeout(
+                newsManager.getLatestNewsByCategory(category, 2)
+              );
+              if (categoryArticles && categoryArticles.length > 0) {
+                console.log(`✅ Found ${categoryArticles.length} articles in ${category}`);
+                allArtsArticles = allArtsArticles.concat(categoryArticles);
+              }
+            } catch (categoryError) {
+              console.log(`⚠️ No articles found in category: ${category}`);
+            }
+          }
+          
+          // Limit to 4 most recent articles
+          allArtsArticles = allArtsArticles.slice(0, 4);
+          
+          if (allArtsArticles.length > 0 && !isCancelled) {
+            const transformedArtsArticles: Article[] = allArtsArticles.map((article: FormattedNewsArticle) => ({
               id: article.id,
               title: article.title,
               date: article.date,
               image: article.image,
               excerpt: article.excerpt,
-              comments: 0,
+              comments: article.commentCount || 0,
               category: article.category,
               content: article.content,
               author: article.author
             }));
             setArtsArticles(transformedArtsArticles);
-            console.log('Successfully loaded WordPress arts articles:', artsArticles.length);
+            console.log('🎨 Successfully loaded Arts articles from Supabase:', allArtsArticles.length);
           } else if (!isCancelled) {
-            console.warn('No WordPress arts articles found, keeping fallback data');
+            console.warn('🎨 No Arts articles found in any category, keeping fallback data');
           }
         } catch (artsError) {
           if (!isCancelled) {
-            console.error('Error loading WordPress arts articles (using fallback):', artsError);
+            console.error('🎨 Error loading Arts articles (using fallback):', artsError);
+          }
+        }
+
+        // Fetch recent articles from Supabase
+        try {
+          console.log('📰 Fetching Recent Articles from Supabase...');
+          
+          const { data: recentPosts, error: recentError } = await supabase
+            .from('posts')
+            .select('id, title')
+            .eq('status', 'publish')
+            .order('created_at', { ascending: false })
+            .limit(7);
+
+          if (!recentError && recentPosts && recentPosts.length > 0 && !isCancelled) {
+            const recentArticlesData = recentPosts.map(post => ({
+              id: post.id,
+              title: post.title
+            }));
+            setRecentArticles(recentArticlesData);
+            console.log('📰 Successfully loaded Recent Articles from Supabase:', recentArticlesData.length);
+          } else if (!isCancelled) {
+            console.warn('📰 No recent articles found in Supabase, keeping fallback data');
+          }
+        } catch (recentError) {
+          if (!isCancelled) {
+            console.error('📰 Error loading Recent Articles (using fallback):', recentError);
+          }
+        }
+
+        // Fetch recent comments from Supabase
+        try {
+          console.log('💬 Fetching Recent Comments from Supabase...');
+          
+          const { data: comments, error: commentsError } = await supabase
+            .from('comments')
+            .select(`
+              id,
+              author_name,
+              created_at,
+              posts!inner (
+                id,
+                title
+              )
+            `)
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+          if (!commentsError && comments && comments.length > 0 && !isCancelled) {
+            const formattedComments: Comment[] = comments.map((comment: any) => ({
+              author: comment.author_name,
+              post: comment.posts.title
+            }));
+            setRecentComments(formattedComments);
+            console.log('💬 Successfully loaded Recent Comments from Supabase:', formattedComments.length);
+          } else if (!isCancelled) {
+            console.warn('💬 No recent comments found in Supabase, keeping fallback data');
+          }
+        } catch (commentsError) {
+          if (!isCancelled) {
+            console.error('💬 Error loading Recent Comments (using fallback):', commentsError);
           }
         }
         
@@ -216,17 +355,19 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     };
   }, []);
 
-  const recentArticles: string[] = [
-    "REVIEW: HAIRSPRAY",
-    "BACH ETERNAL PLAYS ON",
-    "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
-    "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
-    "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
-    "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
-    "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION"
+  // Fallback recent articles
+  const fallbackRecentArticles: {id: number, title: string}[] = [
+    { id: 1, title: "REVIEW: HAIRSPRAY" },
+    { id: 2, title: "BACH ETERNAL PLAYS ON" },
+    { id: 3, title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST" },
+    { id: 4, title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS" },
+    { id: 5, title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO" },
+    { id: 6, title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE" },
+    { id: 7, title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION" }
   ];
 
-  const recentComments: Comment[] = [
+  // Fallback recent comments
+  const fallbackRecentComments: Comment[] = [
     { author: "Zen", post: "SUAnime Brings Wuthering Waves Celebration to USYD Campus" },
     { author: "Навруува акот", post: "Food Review: Khanom House Delivers Subtle Sweet Indulgence" },
     { author: "Catherine", post: "Food Review: Khanom House Delivers Subtle Sweet Indulgence" },
@@ -234,22 +375,6 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     { author: "bob", post: "REVIEW: GASLIGHT AT ROSLYN PACKER THEATRE, SYDNEY" }
   ];
 
-  const bestOfRest: string[] = [
-    "Why the press is losing",
-    "The Cambridge Analytica Files",
-    "Lies spread faster than truth",
-    "The future of journalism",
-    "Facebook's two years of hell",
-    "Social confidence crucial to democracy",
-    "Freakorn",
-    "Is fake news political persuasion?",
-    "Long live the moguls",
-    "The New Fourth Estate",
-    "Snow Fall",
-    "Funding attacks on climate science",
-    "Journos onTwitter",
-    "Arctic sea ice melts"
-  ];
 
   const handleArticleClick = (article: Article) => {
     // Pass the full article data via state instead of just slug
@@ -355,49 +480,105 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           {/* Right Column - Sidebar */}
           <aside className="sidebar">
             {/* Search */}
-            <div className="sidebar-section">
-              <form className="search-bar" onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
-                const searchTerm = formData.get('search') as string;
-                if (searchTerm?.trim()) {
-                  navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
-                }
-              }}>
-                <input type="text" name="search" placeholder="Search articles..." />
-                <button type="submit">🔍</button>
-              </form>
-            </div>
-
-            {/* Follow Us */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">FOLLOW US</h3>
-              <div className="social-icons">
-                <a href="http://www.facebook.com/MegaphoneOz" target="_blank" rel="noopener noreferrer" className="social-icon facebook">f</a>
-                <a href="https://www.flickr.com/photos/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon flickr">fl</a>
-                <a href="http://instagram.com/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon instagram">📷</a>
-                <a href="https://twitter.com/MegaphoneOZ" target="_blank" rel="noopener noreferrer" className="social-icon twitter">t</a>
-                <a href="https://www.youtube.com/channel/UCsp_yc-87m1D5BnUYCoxTAw" target="_blank" rel="noopener noreferrer" className="social-icon youtube">▶</a>
+            <div className="sidebar-section" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Search</h3>
+              <div style={{ padding: '15px' }}>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  const searchTerm = formData.get('search') as string;
+                  if (searchTerm?.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+                  }
+                }} style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    name="search" 
+                    placeholder="Search articles..." 
+                    style={{
+                      flex: 1,
+                      padding: '10px 12px',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      transition: 'border-color 0.2s ease',
+                      background: '#fafafa'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#c60800';
+                      e.target.style.background = 'white';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e0e0e0';
+                      e.target.style.background = '#fafafa';
+                    }}
+                  />
+                  <button 
+                    type="submit"
+                    style={{
+                      padding: '10px 16px',
+                      backgroundColor: '#333',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      transition: 'all 0.2s ease',
+                      minWidth: '50px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#c60800';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#333';
+                    }}
+                  >
+                    🔍
+                  </button>
+                </form>
               </div>
             </div>
 
-            {/* Auth Section */}
-            <SimpleAuthSidebar />
-
+            {/* Follow Us */}
+            <div className="sidebar-section" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Follow Us</h3>
+              <div style={{ padding: '15px', display: 'flex', justifyContent: 'center' }}>
+                <div className="social-icons">
+                  <a href="http://www.facebook.com/MegaphoneOz" target="_blank" rel="noopener noreferrer" className="social-icon facebook">f</a>
+                  <a href="https://www.flickr.com/photos/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon flickr">fl</a>
+                  <a href="http://instagram.com/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon instagram">📷</a>
+                  <a href="https://twitter.com/MegaphoneOZ" target="_blank" rel="noopener noreferrer" className="social-icon twitter">t</a>
+                  <a href="https://www.youtube.com/channel/UCsp_yc-87m1D5BnUYCoxTAw" target="_blank" rel="noopener noreferrer" className="social-icon youtube">▶</a>
+                </div>
+              </div>
+            </div>
 
             {/* Recent Articles */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">RECENT ARTICLES</h3>
+            <div className="sidebar-section" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Recent Articles</h3>
               <ul className="recent-list">
-                {recentArticles.map((article: string, index: number) => (
-                  <li key={index}><a href="/articles" role="button" tabIndex={0}>{article}</a></li>
+                {recentArticles.map((article, index: number) => (
+                  <li key={index}>
+                    <a 
+                      href={`/article/${article.id}`} 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(`/article/${article.id}`);
+                      }}
+                      role="button" 
+                      tabIndex={0}
+                      style={{cursor: 'pointer'}}
+                    >
+                      {article.title}
+                    </a>
+                  </li>
                 ))}
               </ul>
             </div>
 
             {/* Recent Comments */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">RECENT COMMENTS</h3>
+            <div className="sidebar-section" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Recent Comments</h3>
               <ul className="recent-comments">
                 {recentComments.map((comment: Comment, index: number) => (
                   <li key={index}>
@@ -407,15 +588,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
               </ul>
             </div>
 
-            {/* Best of the Rest */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">BEST OF THE REST</h3>
-              <ul className="best-of-list">
-                {bestOfRest.map((item: string, index: number) => (
-                  <li key={index} style={{ display: 'flex', alignItems: 'center' }}><img src="https://megaphoneoz.com/wp-content/uploads/2015/05/MegaphoneGravatar.jpg" alt="Megaphone Icon" style={{ width: 16, height: 16, marginRight: 8 }} /><a href="/news" role="button" tabIndex={0}>{item}</a></li>
-                ))}
-              </ul>
-            </div>
+            {/* Auth Section - Moved to bottom */}
+            <SimpleAuthSidebar />
+
           </aside>
         </div>
       </div>

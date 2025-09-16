@@ -4,9 +4,6 @@ import {
   Box, 
   Container, 
   Typography, 
-  Card, 
-  CardContent, 
-  CardMedia,
   Button, 
   Pagination, 
   TextField,
@@ -14,71 +11,26 @@ import {
   Skeleton,
   Chip
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
+import { supabase } from '../../config/supabase';
 import { Article } from '../../types';
+import NewsCard from '../NewsCard';
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-  },
-}));
-
-const StyledCardMedia = styled(CardMedia)({
-  height: 200,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-});
-
-const ArticleTitle = styled(Typography)(({ theme }) => ({
-  fontWeight: 600,
-  lineHeight: 1.3,
-  marginBottom: theme.spacing(1),
-  display: '-webkit-box',
-  WebkitLineClamp: 2,
-  WebkitBoxOrient: 'vertical',
-  overflow: 'hidden',
-}));
-
-const ArticleExcerpt = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.secondary,
-  marginBottom: theme.spacing(2),
-  display: '-webkit-box',
-  WebkitLineClamp: 3,
-  WebkitBoxOrient: 'vertical',
-  overflow: 'hidden',
-}));
-
-const ArticleMeta = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: 'auto',
-  paddingTop: theme.spacing(1),
-  borderTop: `1px solid ${theme.palette.divider}`,
-}));
-
-// Loading skeleton component
+// Loading skeleton component for horizontal layout
 const ArticleSkeleton: React.FC = () => (
-  <StyledCard>
-    <Skeleton variant="rectangular" height={200} />
-    <CardContent>
-      <Skeleton variant="text" height={32} width="90%" />
-      <Skeleton variant="text" height={20} width="100%" />
-      <Skeleton variant="text" height={20} width="80%" />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-        <Skeleton variant="text" width={100} />
-        <Skeleton variant="text" width={60} />
+  <Box sx={{ display: 'flex', height: 200, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+    <Skeleton variant="rectangular" width={300} height={200} />
+    <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <Box>
+        <Skeleton variant="text" width={80} height={24} sx={{ mb: 1 }} />
+        <Skeleton variant="text" height={40} sx={{ mb: 1 }} />
+        <Skeleton variant="text" height={20} sx={{ mb: 1 }} />
+        <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
       </Box>
-      <Skeleton variant="rectangular" height={36} width={120} sx={{ mt: 2 }} />
-    </CardContent>
-  </StyledCard>
+      <Skeleton variant="text" width={140} height={20} />
+    </Box>
+  </Box>
 );
 
 interface SearchResultsProps {
@@ -98,19 +50,58 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
 
   const query = searchParams.get('q') || '';
 
-  // Transform WordPress news data to component format
-  const transformNewsData = (wpArticles: FormattedNewsArticle[]): Article[] => {
-    return wpArticles.map(article => ({
-      id: article.id,
-      title: article.title,
-      date: article.date,
-      image: article.image,
-      excerpt: article.excerpt,
-      comments: 0, // WordPress search doesn't provide comment count
-      category: article.category || 'News',
-      content: article.excerpt, // Use excerpt as content for search results
-      author: article.author // Use WordPressAuthor object from API or undefined
-    }));
+  // Transform WordPress news data to component format with comment counts from Supabase
+  const transformNewsData = async (wpArticles: FormattedNewsArticle[]): Promise<Article[]> => {
+    // Fetch comment counts for all articles at once
+    const articleIds = wpArticles.map(article => article.id);
+    
+    try {
+      const { data: commentCounts, error } = await supabase
+        .from('comments')
+        .select('post_id')
+        .in('post_id', articleIds)
+        .eq('status', 'approved');
+
+      if (error) {
+        console.error('Error fetching comment counts for search results:', error);
+      }
+
+      // Count comments per article
+      const commentCountMap: { [key: number]: number } = {};
+      if (commentCounts) {
+        commentCounts.forEach(comment => {
+          commentCountMap[comment.post_id] = (commentCountMap[comment.post_id] || 0) + 1;
+        });
+      }
+
+      return wpArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        image: article.image,
+        excerpt: article.excerpt,
+        comments: commentCountMap[article.id] || 0,
+        commentCount: commentCountMap[article.id] || 0,
+        category: article.category || 'News',
+        content: article.excerpt, // Use excerpt as content for search results
+        author: article.author // Use WordPressAuthor object from API or undefined
+      }));
+    } catch (error) {
+      console.error('Error transforming search results with comment counts:', error);
+      // Fallback to original transformation without comment counts
+      return wpArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        image: article.image,
+        excerpt: article.excerpt,
+        comments: 0,
+        commentCount: 0,
+        category: article.category || 'News',
+        content: article.excerpt,
+        author: article.author
+      }));
+    }
   };
 
   // Perform search
@@ -135,11 +126,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
       );
 
       if (searchResults && searchResults.length > 0) {
-        const transformedResults = transformNewsData(searchResults);
+        const transformedResults = await transformNewsData(searchResults);
         setArticles(transformedResults);
         setTotalResults(transformedResults.length);
         setTotalPages(Math.ceil(transformedResults.length / articlesPerPage));
-        console.log(`Found ${transformedResults.length} search results`);
+        console.log(`Found ${transformedResults.length} search results with comment counts`);
       } else {
         setArticles([]);
         setTotalResults(0);
@@ -257,8 +248,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
         {/* Search Results */}
         {loading ? (
           <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr' },
+            display: 'flex',
+            flexDirection: 'column',
             gap: 3,
             mb: 4 
           }}>
@@ -269,46 +260,22 @@ const SearchResults: React.FC<SearchResultsProps> = ({ className = '' }) => {
         ) : currentArticles.length > 0 ? (
           <>
             <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr' },
+              display: 'flex',
+              flexDirection: 'column',
               gap: 3,
               mb: 4 
             }}>
               {currentArticles.map((article) => (
-                <StyledCard key={article.id}>
-                  {article.image && (
-                    <StyledCardMedia
-                      image={article.image}
-                      title={article.title}
-                    />
-                  )}
-                  <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <ArticleTitle variant="h6">
-                      {article.title}
-                    </ArticleTitle>
-                    {article.excerpt && (
-                      <ArticleExcerpt variant="body2">
-                        {article.excerpt}
-                      </ArticleExcerpt>
-                    )}
-                    <ArticleMeta>
-                      <Typography variant="caption" color="text.secondary">
-                        {article.date}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {article.category}
-                      </Typography>
-                    </ArticleMeta>
-                    <Button 
-                      variant="outlined" 
-                      size="small" 
-                      sx={{ mt: 2, alignSelf: 'flex-start' }}
-                      onClick={() => handleArticleClick(article)}
-                    >
-                      Read more
-                    </Button>
-                  </CardContent>
-                </StyledCard>
+                <NewsCard
+                  key={article.id}
+                  id={article.id}
+                  title={article.title}
+                  excerpt={article.excerpt}
+                  image={article.image}
+                  date={article.date}
+                  comments={article.comments || 0}
+                  onClick={() => handleArticleClick(article)}
+                />
               ))}
             </Box>
 
