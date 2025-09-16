@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>MegaphoneOZ</title>
+    <script type="text/javascript">
+      // GitHub Pages SPA redirect for user pages (username.github.io)
+      // This handles direct access to routes like /article/17
+      var redirect = sessionStorage.redirect;
+      delete sessionStorage.redirect;
+      if (redirect && redirect != location.href) {
+        history.replaceState(null, null, redirect);
+      }
+    </script>
+  </head>
+  <body>
+    <script type="text/javascript">
+      // Store the redirect and navigate to homepage
+      var path = location.pathname;
+      var search = location.search;
+      var hash = location.hash;
+      
+      if (path !== '/') {
+        sessionStorage.redirect = location.href;
+        location.replace('/' + (search ? search + '&' : '?') + 'redirect=' + encodeURIComponent(path + search + hash));
+      }
+    </script>
+  </body>
+</html>
