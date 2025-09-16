@@ -19,7 +19,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
+      <Router basename="/megaphoneoz">
         <div className="App">
           <HeaderWithWordPress />
           <Routes>
