@@ -3,8 +3,7 @@ import {
   Card,
   CardContent,
   Typography,
-  Box,
-  Chip
+  Box
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CommentIcon from '@mui/icons-material/Comment';
@@ -29,15 +28,13 @@ const HorizontalCard = styled(Card)(({ theme }) => ({
 
 const ImageContainer = styled(Box)(({ theme }) => ({
   width: 300,
-  minHeight: '100%',  // 最小高度100%
-  alignSelf: 'stretch', // 拉伸到父容器的全高
   flexShrink: 0,
   backgroundColor: theme.palette.grey[200],
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   overflow: 'hidden',
-  position: 'relative', // 为了确保图片能正确定位
+  alignSelf: 'stretch', // 拉伸到父容器高度
   [theme.breakpoints.down('md')]: {
     width: '100%',
     height: 200,
@@ -83,16 +80,6 @@ const ContentMain = styled(Box)({
   marginBottom: 'auto', // 让这部分内容紧凑，MetaInfo自动推到底部
 });
 
-const CategoryChip = styled(Chip)(({ theme }) => ({
-  alignSelf: 'flex-start',
-  marginBottom: theme.spacing(1),
-  backgroundColor: theme.palette.grey[100],
-  color: theme.palette.text.secondary,
-  fontSize: '0.75rem',
-  height: 24,
-  textTransform: 'uppercase',
-  fontWeight: 600,
-}));
 
 const ArticleTitle = styled(Typography)(({ theme }) => ({
   fontWeight: 700,
@@ -113,7 +100,7 @@ const ArticleExcerpt = styled(Typography)(({ theme }) => ({
   lineHeight: 1.5,
   marginBottom: 0, // 移除底部间距，让内容更紧凑
   display: '-webkit-box',
-  WebkitLineClamp: 3,
+  WebkitLineClamp: 5,
   WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
 }));
@@ -145,7 +132,6 @@ interface NewsCardProps {
   title: string;
   excerpt?: string;
   image?: string;
-  category?: string;
   date: string;
   comments?: number;
   onClick?: () => void;
@@ -155,7 +141,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
   title,
   excerpt,
   image,
-  category,
   date,
   comments = 0,
   onClick
@@ -192,9 +177,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
       </ImageContainer>
       <ContentSection>
         <ContentMain>
-          {category && (
-            <CategoryChip label={category} size="small" />
-          )}
           <ArticleTitle variant="h5">
             {title}
           </ArticleTitle>

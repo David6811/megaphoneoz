@@ -283,7 +283,6 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
                     title={article.title}
                     excerpt={article.excerpt}
                     image={article.image}
-                    category={article.category}
                     date={article.date}
                     comments={0}
                     onClick={() => navigate(`/article/${article.id}`)}

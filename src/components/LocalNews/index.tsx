@@ -558,7 +558,6 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
                     title={article.title}
                     excerpt={article.excerpt}
                     image={article.image}
-                    category={categoryTitle.toUpperCase()}
                     date={article.date}
                     comments={article.comments || 0}
                     onClick={() => handleArticleClick(article)}

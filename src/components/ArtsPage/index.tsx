@@ -76,7 +76,6 @@ const ArtsPage: React.FC = () => {
                 title={article.title}
                 excerpt={article.excerpt}
                 image={article.image}
-                category={article.category}
                 date={article.date}
                 comments={article.commentCount || 0}
                 onClick={() => handleArticleClick(article)}
