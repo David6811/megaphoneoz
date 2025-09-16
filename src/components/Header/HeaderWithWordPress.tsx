@@ -247,36 +247,8 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
   return (
     <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50 }} className={className}>
       <Box sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
-        <AppBar position="static" elevation={0} sx={{ 
-          background: 'linear-gradient(135deg, #8b0000 0%, #dc143c 15%, #b91c1c 35%, #991b1b 65%, #7f1d1d 85%, #450a0a 100%)',
-          color: 'white', 
-          height: 180, 
-          width: '100%',
-          position: 'relative',
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(139, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '6px',
-            background: 'linear-gradient(90deg, transparent 0%, #8b4513 10%, #daa520 25%, #ffd700 50%, #daa520 75%, #8b4513 90%, transparent 100%)',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'repeating-linear-gradient(90deg, transparent 0px, rgba(0,0,0,0.1) 25px, transparent 50px, rgba(255,255,255,0.03) 75px)',
-            pointerEvents: 'none'
-          }
-        }}>
-          <Container maxWidth="xl" sx={{ height: '100%', display: 'flex', p: 0, position: 'relative', zIndex: 2 }}>
+        <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: theme.palette.text.primary, height: 180, width: '100%' }}>
+          <Container maxWidth="xl" sx={{ height: '100%', display: 'flex', p: 0 }}>
             <Toolbar sx={{ 
               justifyContent: 'space-between', 
               py: 4, 
@@ -311,22 +283,14 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                   sx={{ 
                     fontWeight: 900, 
                     fontSize: '2.5rem', 
-                    letterSpacing: '0.15em', 
+                    letterSpacing: '0.1em', 
                     margin: 0,
-                    fontFamily: 'Georgia, serif',
-                    minWidth: 'fit-content',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.7), 0 0 20px rgba(255,215,0,0.3)',
-                    position: 'relative'
+                    fontFamily: '"Roboto", sans-serif',
+                    minWidth: 'fit-content'
                   }}
                 >
-                  <span style={{ 
-                    color: '#ffd700',
-                    textShadow: '3px 3px 6px rgba(0,0,0,0.8), 0 0 25px rgba(255,215,0,0.5), 0 0 35px rgba(255,215,0,0.3)'
-                  }}>MEGAPHONE</span>
-                  <span style={{ 
-                    color: '#fff8dc',
-                    textShadow: '3px 3px 6px rgba(0,0,0,0.8), 0 0 25px rgba(255,248,220,0.4)'
-                  }}>OZ</span>
+                  <span style={{ color: theme.palette.secondary.main }}>MEGAPHONE</span>
+                  <span style={{ color: theme.palette.primary.main }}>OZ</span>
                 </Typography>
                 
                 {/* Professional News Ticker */}
@@ -347,52 +311,38 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                       mb: 1
                     }}>
                       <Box sx={{
-                        width: 10,
-                        height: 10,
+                        width: 8,
+                        height: 8,
                         borderRadius: '50%',
-                        bgcolor: '#ffd700',
+                        bgcolor: '#d32f2f',
                         mr: 1.5,
-                        animation: 'theatricalPulse 1.5s infinite',
-                        boxShadow: '0 0 10px rgba(255,215,0,0.6), 0 0 20px rgba(255,215,0,0.3)',
-                        '@keyframes theatricalPulse': {
-                          '0%': { 
-                            opacity: 1,
-                            transform: 'scale(1)',
-                            boxShadow: '0 0 10px rgba(255,215,0,0.6), 0 0 20px rgba(255,215,0,0.3)'
-                          },
-                          '50%': { 
-                            opacity: 0.7,
-                            transform: 'scale(1.2)',
-                            boxShadow: '0 0 15px rgba(255,215,0,0.8), 0 0 30px rgba(255,215,0,0.4)'
-                          },
-                          '100%': { 
-                            opacity: 1,
-                            transform: 'scale(1)',
-                            boxShadow: '0 0 10px rgba(255,215,0,0.6), 0 0 20px rgba(255,215,0,0.3)'
-                          }
+                        animation: 'pulse 2s infinite',
+                        '@keyframes pulse': {
+                          '0%': { opacity: 1 },
+                          '50%': { opacity: 0.5 },
+                          '100%': { opacity: 1 }
                         }
                       }} />
                       <Typography variant="overline" sx={{ 
-                        fontSize: '0.8rem', 
+                        fontSize: '0.75rem', 
                         fontWeight: 700,
-                        color: '#ffd700',
-                        letterSpacing: 2.5,
-                        fontFamily: 'Georgia, serif',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.8), 0 0 8px rgba(255,215,0,0.4)'
+                        color: '#333',
+                        letterSpacing: 2,
+                        fontFamily: '"Arial", sans-serif'
                       }}>
-                        🎭 BREAKING NEWS
+                        BREAKING NEWS
                       </Typography>
                     </Box>
                     <Box sx={{ 
-                      background: 'linear-gradient(135deg, rgba(255,248,220,0.95) 0%, rgba(255,235,205,0.95) 25%, rgba(255,228,196,0.95) 50%, rgba(255,218,185,0.95) 75%, rgba(255,215,0,0.1) 100%)',
-                      borderRadius: '8px',
+                      bgcolor: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                      borderRadius: 1,
                       px: 3,
                       py: 2, 
                       width: '100%',
-                      height: 54,
+                      height: 50,
                       overflow: 'hidden',
-                      border: '2px solid rgba(255,215,0,0.6)',
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,215,0,0.2), inset 0 -2px 4px rgba(139,0,0,0.1)',
+                      border: '1px solid #e1e5e9',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                       position: 'relative',
                       '&::before': {
                         content: '""',
@@ -400,21 +350,8 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                         top: 0,
                         left: 0,
                         height: '100%',
-                        width: '6px',
-                        background: 'linear-gradient(180deg, #ffd700 0%, #ffed4e 50%, #ffc107 100%)',
-                        borderRadius: '0 4px 4px 0',
-                        boxShadow: '2px 0 8px rgba(255,215,0,0.4)'
-                      },
-                      '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 2,
-                        right: 2,
-                        bottom: 2,
-                        left: 2,
-                        border: '1px solid rgba(255,215,0,0.3)',
-                        borderRadius: '6px',
-                        pointerEvents: 'none'
+                        width: '4px',
+                        bgcolor: '#d32f2f'
                       }
                     }}>
                       <Typography 
@@ -422,17 +359,15 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
                         sx={{ 
                           display: 'inline-block',
                           whiteSpace: 'nowrap',
-                          animation: 'theaterScroll 50s linear infinite',
+                          animation: 'professionalScroll 45s linear infinite',
                           animationDelay: '0s',
                           animationPlayState: 'running',
-                          fontSize: '0.95rem',
-                          fontWeight: 600,
-                          color: '#8b0000',
-                          lineHeight: '34px',
-                          fontFamily: 'Georgia, serif',
-                          textShadow: '1px 1px 2px rgba(255,215,0,0.3), 0 0 4px rgba(255,255,255,0.5)',
-                          letterSpacing: '0.5px',
-                          '@keyframes theaterScroll': {
+                          fontSize: '0.9rem',
+                          fontWeight: 500,
+                          color: '#2c3e50',
+                          lineHeight: '30px',
+                          fontFamily: '"Georgia", serif',
+                          '@keyframes professionalScroll': {
                             '0%': { transform: 'translateX(100%)' },
                             '100%': { transform: 'translateX(-100%)' }
                           }
