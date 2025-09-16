@@ -8,17 +8,14 @@ import {
   Button, 
   Avatar, 
   Chip, 
-  TextField,
   Skeleton,
-  CardMedia,
-  Alert,
-  CircularProgress
+  CardMedia
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import NewsServiceManager, { FormattedNewsArticle, FormattedComment } from '../../services/newsServiceManager';
-import { Comment } from '../../types';
+import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
+import { CommentsSection } from '../Comments';
 
 const ArticleContainer = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -27,9 +24,6 @@ const ArticleContainer = styled(Box)(({ theme }) => ({
   paddingBottom: theme.spacing(4),
 }));
 
-const ArticleHeader = styled(Box)(({ theme }) => ({
-  marginBottom: theme.spacing(4),
-}));
 
 // FeaturedImage component removed - WordPress content includes images in correct positions
 
@@ -225,12 +219,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
   const [article, setArticle] = useState<FormattedNewsArticle | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<FormattedNewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<FormattedComment[]>([]);
-  const [newComment, setNewComment] = useState({ name: '', email: '', website: '', comment: '' });
-  const [saveInfo, setSaveInfo] = useState(false);
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // Generate dynamic author info based on article data
   const generateAuthorInfo = (article: FormattedNewsArticle | null) => {
@@ -344,37 +332,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
     return expandedContent;
   };
 
-  const mockComments: Comment[] = [
-    {
-      author: 'Sarah Chen',
-      post: 'This happened to my roommate last semester. She was so scared she almost sent $5000 before I convinced her to call the police first. These scammers are getting more sophisticated.',
-      date: 'March 15, 2024',
-      email: 'sarah.chen@email.com'
-    },
-    {
-      author: 'David Liu',
-      post: 'Thank you for raising awareness about this. My university should do more to warn international students about these scams.',
-      date: 'March 14, 2024', 
-      email: 'david.liu@email.com'
-    }
-  ];
-
-  // Load saved user info from localStorage
-  useEffect(() => {
-    const savedName = localStorage.getItem('megaphone_comment_name');
-    const savedEmail = localStorage.getItem('megaphone_comment_email');
-    const savedWebsite = localStorage.getItem('megaphone_comment_website');
-    
-    if (savedName || savedEmail || savedWebsite) {
-      setNewComment({
-        name: savedName || '',
-        email: savedEmail || '',
-        website: savedWebsite || '',
-        comment: ''
-      });
-      setSaveInfo(true);
-    }
-  }, []);
 
   useEffect(() => {
     const fetchArticleData = async () => {
@@ -424,52 +381,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
         const related = await newsManager.getLatestNewsForSlider(4);
         setRelatedArticles(related.slice(0, 3));
         
-        // Fetch real comments for this article after we have the article data
-        // Use the current article state or get it from the API
-        let currentArticleId: number | null = null;
-        
-        if (id) {
-          currentArticleId = parseInt(id);
-        } else if (location.state && (location.state as any).article) {
-          currentArticleId = (location.state as any).article.id;
-        }
-        
-        if (currentArticleId) {
-          try {
-            const articleComments = await newsManager.fetchCommentsByPostId(currentArticleId);
-            const formattedComments: FormattedComment[] = articleComments.map(comment => ({
-              id: comment.id,
-              postId: comment.post,
-              authorName: comment.author_name,
-              content: comment.content.rendered.replace(/<[^>]*>/g, ''), // Strip HTML
-              date: new Date(comment.date).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              }),
-              avatarUrl: comment.author_avatar_urls['48'] || comment.author_avatar_urls['96'] || comment.author_avatar_urls['24'] || '',
-              authorUrl: comment.author_url || undefined,
-              status: comment.status
-            }));
-            setComments(formattedComments);
-            console.log(`Successfully loaded ${formattedComments.length} comments for article ${currentArticleId}`);
-          } catch (error) {
-            console.error('Error loading comments, using fallback:', error);
-            // Convert mockComments to FormattedComment format as fallback
-            const fallbackComments: FormattedComment[] = mockComments.map((comment, index) => ({
-              id: index + 1,
-              postId: currentArticleId || 0,
-              authorName: comment.author,
-              content: comment.post,
-              date: comment.date || 'March 15, 2024',
-              avatarUrl: '',
-              authorUrl: undefined, // Fallback comments don't have website URLs
-              status: 'approve' // Fallback comments are treated as approved
-            }));
-            setComments(fallbackComments);
-          }
-        }
-        
       } catch (error) {
         console.error('Error fetching article data:', error);
       } finally {
@@ -485,83 +396,6 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
   };
 
 
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!article) {
-      setSubmitError('Article not found');
-      return;
-    }
-
-    setSubmitLoading(true);
-    setSubmitError(null);
-    setSubmitSuccess(false);
-
-    try {
-      const newsManager = NewsServiceManager.getInstance();
-      
-      const submittedComment = await newsManager.submitComment(
-        article.id,
-        newComment.name,
-        newComment.email,
-        newComment.comment,
-        newComment.website || undefined
-      );
-
-      if (submittedComment) {
-        // Convert WordPress comment to our FormattedComment format
-        const formattedComment: FormattedComment = {
-          id: submittedComment.id,
-          postId: submittedComment.post,
-          authorName: submittedComment.author_name,
-          content: submittedComment.content.rendered.replace(/<[^>]*>/g, ''), // Strip HTML
-          date: new Date(submittedComment.date).toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          }),
-          avatarUrl: submittedComment.author_avatar_urls['48'] || submittedComment.author_avatar_urls['96'] || submittedComment.author_avatar_urls['24'] || '',
-          authorUrl: submittedComment.author_url || undefined,
-          status: submittedComment.status
-        };
-
-        // Add comment to the list (usually goes to moderation first)
-        setComments([formattedComment, ...comments]);
-        setSubmitSuccess(true);
-        setNewComment({ name: '', email: '', website: '', comment: '' });
-        
-        // Save user info if requested
-        if (saveInfo) {
-          localStorage.setItem('megaphone_comment_name', newComment.name);
-          localStorage.setItem('megaphone_comment_email', newComment.email);
-          localStorage.setItem('megaphone_comment_website', newComment.website);
-        }
-
-        // Clear success message after 5 seconds
-        setTimeout(() => {
-          setSubmitSuccess(false);
-        }, 5000);
-
-        console.log('Comment submitted successfully:', formattedComment);
-      } else {
-        throw new Error('Failed to submit comment');
-      }
-    } catch (error) {
-      console.error('Error submitting comment:', error);
-      if (error instanceof Error) {
-        setSubmitError(error.message);
-      } else {
-        setSubmitError('Failed to submit comment. Please try again.');
-      }
-      
-      // Clear error message after 10 seconds
-      setTimeout(() => {
-        setSubmitError(null);
-      }, 10000);
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
 
   const handleRelatedClick = (relatedArticle: FormattedNewsArticle) => {
     // Pass the related article data via state
@@ -781,203 +615,8 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({ className = '' }) => {
               </Box>
             </Box>
 
-            {/* Comments Section */}
-            <Box sx={{ mt: 6 }}>
-              <Typography variant="h5" gutterBottom>
-                Comments ({comments.length})
-              </Typography>
-
-              {/* Comments List */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 4 }}>
-                {comments.length > 0 ? (
-                  comments.map((comment) => (
-                    <Card key={comment.id} sx={{ p: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                        <Avatar 
-                          src={comment.avatarUrl} 
-                          sx={{ width: 40, height: 40 }}
-                        >
-                          {comment.authorName.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Box sx={{ flex: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                            {comment.authorUrl ? (
-                              <Typography 
-                                variant="subtitle2" 
-                                fontWeight={600}
-                                component="a"
-                                href={comment.authorUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                sx={{ 
-                                  color: '#c60800',
-                                  textDecoration: 'none',
-                                  '&:hover': {
-                                    textDecoration: 'underline'
-                                  }
-                                }}
-                              >
-                                {comment.authorName}
-                              </Typography>
-                            ) : (
-                              <Typography variant="subtitle2" fontWeight={600}>
-                                {comment.authorName}
-                              </Typography>
-                            )}
-                            <Typography variant="caption" color="text.secondary">
-                              {comment.date}
-                            </Typography>
-                            {comment.status === 'hold' && (
-                              <Chip 
-                                label="Awaiting Moderation" 
-                                size="small" 
-                                sx={{ 
-                                  backgroundColor: '#fff3cd',
-                                  color: '#856404',
-                                  fontSize: '0.7rem',
-                                  height: 20
-                                }}
-                              />
-                            )}
-                          </Box>
-                          <Typography variant="body2">
-                            {comment.content}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Card>
-                  ))
-                ) : (
-                  <Card sx={{ p: 3 }}>
-                    <Typography variant="body2" color="text.secondary" textAlign="center">
-                      No comments yet. Be the first to comment!
-                    </Typography>
-                  </Card>
-                )}
-              </Box>
-
-              {/* Comment Form */}
-              <Card sx={{ p: 3, mb: 4 }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
-                  ADD A COMMENT
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Your email address will not be published. Required fields are marked <span style={{ color: 'red' }}>*</span>
-                </Typography>
-                
-                {/* Success Message */}
-                {submitSuccess && (
-                  <Alert severity="success" sx={{ mb: 3 }}>
-                    Comment submitted successfully! Your comment is awaiting moderation and will appear once approved.
-                  </Alert>
-                )}
-                
-                {/* Error Message */}
-                {submitError && (
-                  <Alert severity="error" sx={{ mb: 3 }}>
-                    {submitError}
-                  </Alert>
-                )}
-                <Box component="form" onSubmit={handleCommentSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <TextField
-                    placeholder="Name"
-                    required
-                    value={newComment.name}
-                    onChange={(e) => setNewComment({ ...newComment, name: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: 0,
-                        '& fieldset': {
-                          border: 'none',
-                        },
-                      },
-                    }}
-                  />
-                  <TextField
-                    placeholder="Email"
-                    type="email"
-                    required
-                    value={newComment.email}
-                    onChange={(e) => setNewComment({ ...newComment, email: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: 0,
-                        '& fieldset': {
-                          border: 'none',
-                        },
-                      },
-                    }}
-                  />
-                  <TextField
-                    placeholder="Website"
-                    value={newComment.website}
-                    onChange={(e) => setNewComment({ ...newComment, website: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: 0,
-                        '& fieldset': {
-                          border: 'none',
-                        },
-                      },
-                    }}
-                  />
-                  <TextField
-                    multiline
-                    rows={6}
-                    required
-                    value={newComment.comment}
-                    onChange={(e) => setNewComment({ ...newComment, comment: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: 0,
-                        '& fieldset': {
-                          border: 'none',
-                        },
-                      },
-                    }}
-                  />
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <input
-                      type="checkbox"
-                      id="save-info"
-                      checked={saveInfo}
-                      onChange={(e) => setSaveInfo(e.target.checked)}
-                    />
-                    <label htmlFor="save-info" style={{ fontSize: '0.875rem', color: '#666' }}>
-                      Save my name, email, and website in this browser for the next time I comment.
-                    </label>
-                  </Box>
-                  <Button 
-                    type="submit" 
-                    variant="contained" 
-                    disabled={submitLoading}
-                    startIcon={submitLoading ? <CircularProgress size={20} color="inherit" /> : null}
-                    sx={{ 
-                      alignSelf: 'flex-start',
-                      backgroundColor: '#c60800',
-                      borderRadius: 0,
-                      px: 4,
-                      py: 1.5,
-                      fontSize: '0.9rem',
-                      fontWeight: 700,
-                      '&:hover': {
-                        backgroundColor: '#a00600'
-                      },
-                      '&:disabled': {
-                        backgroundColor: '#999',
-                        color: 'white'
-                      }
-                    }}
-                  >
-                    {submitLoading ? 'SUBMITTING...' : 'ADD COMMENT'}
-                  </Button>
-                </Box>
-              </Card>
-            </Box>
+            {/* Comments Section - Using Supabase */}
+            <CommentsSection postId={article.id} />
           </Box>
         </Box>
       </Container>

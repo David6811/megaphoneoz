@@ -86,6 +86,26 @@ export interface FormattedComment {
   avatarUrl: string;
 }
 
+// Supabase Comment Types
+export interface SupabaseComment {
+  id: number;
+  post_id: number;
+  user_id?: string;
+  author_name?: string;
+  author_email?: string;
+  content: string;
+  status: string;
+  parent_id?: number;
+  created_at: string;
+}
+
+export interface CommentFormData {
+  author_name: string;
+  author_email: string;
+  content: string;
+  parent_id?: number;
+}
+
 // Common Component Props
 export interface BaseComponentProps {
   className?: string;

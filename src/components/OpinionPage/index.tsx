@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Container } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
+import NewsCard from '../NewsCard';
 
 const OpinionPage: React.FC = () => {
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<FormattedNewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,6 +25,15 @@ const OpinionPage: React.FC = () => {
     fetchOpinionContent();
   }, []);
 
+  const handleArticleClick = (article: FormattedNewsArticle) => {
+    navigate(`/article/${article.id}`, { 
+      state: { 
+        article: article,
+        categoryTitle: article.category || 'OPINION'
+      } 
+    });
+  };
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h2" component="h1" sx={{ 
@@ -37,33 +49,20 @@ const OpinionPage: React.FC = () => {
       {loading ? (
         <Typography>Loading opinion pieces...</Typography>
       ) : (
-        <Box sx={{ display: 'grid', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {articles.length > 0 ? (
             articles.map((article) => (
-              <Box key={article.id} sx={{ 
-                p: 3, 
-                border: '1px solid #eee',
-                borderRadius: 2,
-                '&:hover': {
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.3s ease'
-                }
-              }}>
-                <Typography variant="h4" component="h2" sx={{ 
-                  mb: 2, 
-                  fontWeight: 600,
-                  fontSize: '1.5rem'
-                }}>
-                  {article.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {article.date} • Opinion
-                </Typography>
-                <Typography variant="body1">
-                  {article.excerpt}
-                </Typography>
-              </Box>
+              <NewsCard
+                key={article.id}
+                id={article.id}
+                title={article.title}
+                excerpt={article.excerpt}
+                image={article.image}
+                category="OPINION"
+                date={article.date}
+                comments={article.commentCount || 0}
+                onClick={() => handleArticleClick(article)}
+              />
             ))
           ) : (
             <Typography variant="body1" color="text.secondary">

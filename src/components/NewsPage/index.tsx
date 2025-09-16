@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Container } from '@mui/material';
 import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
+import NewsCard from '../NewsCard';
 
 interface NewsPageProps {
   category?: string;
@@ -9,6 +10,7 @@ interface NewsPageProps {
 
 const NewsPage: React.FC<NewsPageProps> = () => {
   const { category } = useParams<{ category: string }>();
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<FormattedNewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +39,17 @@ const NewsPage: React.FC<NewsPageProps> = () => {
 
   const getCategoryTitle = () => {
     if (!category) return 'News';
-    return category.charAt(0).toUpperCase() + category.slice(1);
+    const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1);
+    return `News > ${formattedCategory}`;
+  };
+
+  const handleArticleClick = (article: FormattedNewsArticle) => {
+    navigate(`/article/${article.id}`, { 
+      state: { 
+        article: article,
+        categoryTitle: article.category || 'NEWS'
+      } 
+    });
   };
 
   return (
@@ -55,32 +67,19 @@ const NewsPage: React.FC<NewsPageProps> = () => {
       {loading ? (
         <Typography>Loading articles...</Typography>
       ) : (
-        <Box sx={{ display: 'grid', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {articles.map((article) => (
-            <Box key={article.id} sx={{ 
-              p: 3, 
-              border: '1px solid #eee',
-              borderRadius: 2,
-              '&:hover': {
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                transform: 'translateY(-2px)',
-                transition: 'all 0.3s ease'
-              }
-            }}>
-              <Typography variant="h4" component="h2" sx={{ 
-                mb: 2, 
-                fontWeight: 600,
-                fontSize: '1.5rem'
-              }}>
-                {article.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {article.date} • {article.category}
-              </Typography>
-              <Typography variant="body1">
-                {article.excerpt}
-              </Typography>
-            </Box>
+            <NewsCard
+              key={article.id}
+              id={article.id}
+              title={article.title}
+              excerpt={article.excerpt}
+              image={article.image}
+              category={article.category}
+              date={article.date}
+              comments={article.commentCount || 0}
+              onClick={() => handleArticleClick(article)}
+            />
           ))}
         </Box>
       )}

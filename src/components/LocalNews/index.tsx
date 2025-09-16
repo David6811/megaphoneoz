@@ -1,55 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Card, CardMedia, CardContent, Pagination, Button, Skeleton } from '@mui/material';
+import { Box, Container, Typography, Pagination, Button, Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
 import NewsServiceManager, { FormattedNewsArticle, FormattedComment } from '../../services/newsServiceManager';
 import { Article, Comment } from '../../types';
+import NewsCard from '../NewsCard';
 
 // Styled components following Material-First strategy
-const StyledCard = styled(Card)(() => ({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-  },
-}));
-
-const StyledCardMedia = styled(CardMedia)({
-  height: 200,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-});
-
-const ArticleTitle = styled(Typography)(({ theme }) => ({
-  fontWeight: 600,
-  lineHeight: 1.3,
-  marginBottom: theme.spacing(1),
-  display: '-webkit-box',
-  WebkitLineClamp: 3,
-  WebkitBoxOrient: 'vertical',
-  overflow: 'hidden',
-}));
-
-const ArticleExcerpt = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.secondary,
-  marginBottom: theme.spacing(2),
-  display: '-webkit-box',
-  WebkitLineClamp: 3,
-  WebkitBoxOrient: 'vertical',
-  overflow: 'hidden',
-}));
-
-const ArticleMeta = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: 'auto',
-  paddingTop: theme.spacing(1),
-  borderTop: `1px solid ${theme.palette.divider}`,
-}));
 
 const SidebarSection = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.grey[50],
@@ -126,21 +83,20 @@ const RecentList = styled('ul')(({ theme }) => ({
   },
 }));
 
-// Loading skeleton component
+// Loading skeleton component for horizontal layout
 const ArticleSkeleton: React.FC = () => (
-  <StyledCard>
-    <Skeleton variant="rectangular" height={200} />
-    <CardContent>
-      <Skeleton variant="text" height={32} width="90%" />
-      <Skeleton variant="text" height={20} width="100%" />
-      <Skeleton variant="text" height={20} width="80%" />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-        <Skeleton variant="text" width={100} />
-        <Skeleton variant="text" width={60} />
+  <Box sx={{ display: 'flex', height: 200, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+    <Skeleton variant="rectangular" width={300} height={200} />
+    <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <Box>
+        <Skeleton variant="text" width={80} height={24} sx={{ mb: 1 }} />
+        <Skeleton variant="text" height={40} sx={{ mb: 1 }} />
+        <Skeleton variant="text" height={20} sx={{ mb: 1 }} />
+        <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
       </Box>
-      <Skeleton variant="rectangular" height={36} width={120} sx={{ mt: 2 }} />
-    </CardContent>
-  </StyledCard>
+      <Skeleton variant="text" width={140} height={20} />
+    </Box>
+  </Box>
 );
 
 // Empty state component
@@ -567,25 +523,24 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
                 component="h1" 
                 sx={{ 
                   fontWeight: 700, 
-                  color: 'primary.main',
+                  color: '#c60800',
                   mb: 2,
                   borderBottom: 3,
-                  borderColor: 'primary.main',
+                  borderColor: '#c60800',
                   display: 'inline-block',
-                  pb: 1
+                  pb: 1,
+                  fontSize: '2rem',
+                  textTransform: 'uppercase'
                 }}
               >
-                {categoryTitle}
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Stay informed with the latest news and updates
+                News &gt; {categoryTitle}
               </Typography>
             </Box>
 
-            {/* Articles Grid */}
+            {/* Articles List */}
             <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+              display: 'flex',
+              flexDirection: 'column',
               gap: 3,
               mb: 4 
             }}>
@@ -597,46 +552,21 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
               ) : currentArticles.length > 0 ? (
                 // Show actual articles
                 currentArticles.map((article) => (
-                  <Box key={article.id}>
-                    <StyledCard>
-                      {article.image && (
-                        <StyledCardMedia
-                          image={article.image}
-                          title={article.title}
-                        />
-                      )}
-                      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                        <ArticleTitle variant="h6">
-                          {article.title}
-                        </ArticleTitle>
-                        {article.excerpt && (
-                          <ArticleExcerpt variant="body2">
-                            {article.excerpt}
-                          </ArticleExcerpt>
-                        )}
-                        <ArticleMeta>
-                          <Typography variant="caption" color="text.secondary">
-                            {article.date}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            💬 {article.comments}
-                          </Typography>
-                        </ArticleMeta>
-                        <Button 
-                          variant="outlined" 
-                          size="small" 
-                          sx={{ mt: 2, alignSelf: 'flex-start' }}
-                          onClick={() => handleArticleClick(article)}
-                        >
-                          Continue reading
-                        </Button>
-                      </CardContent>
-                    </StyledCard>
-                  </Box>
+                  <NewsCard
+                    key={article.id}
+                    id={article.id}
+                    title={article.title}
+                    excerpt={article.excerpt}
+                    image={article.image}
+                    category={categoryTitle.toUpperCase()}
+                    date={article.date}
+                    comments={article.comments || 0}
+                    onClick={() => handleArticleClick(article)}
+                  />
                 ))
               ) : (
                 // Show empty state
-                <Box sx={{ gridColumn: '1 / -1' }}>
+                <Box>
                   <EmptyState category={categoryTitle.toLowerCase()} />
                 </Box>
               )}

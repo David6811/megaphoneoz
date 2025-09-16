@@ -6,6 +6,8 @@ const SupabaseTest: React.FC = () => {
   const [articles, setArticles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [categories, setCategories] = useState<string[]>([])
+  const [categoryBreakdown, setCategoryBreakdown] = useState<{ [key: string]: number }>({})
 
   const newsManager = NewsServiceManager.getInstance()
 
@@ -18,49 +20,149 @@ const SupabaseTest: React.FC = () => {
       setLoading(true)
       setError(null)
 
-      console.log('🚀 Testing Supabase connection...')
+      console.log('🚀 Testing Supabase connection and investigating categories...')
       
       // Import supabase directly for debugging
       const { supabase } = await import('../config/supabase')
       
-      // First, let's see what's actually in the posts table
+      // 1. First, let's see what's actually in the posts table
       console.log('🔍 Checking raw posts table...')
       const { data: rawPosts, error: rawError } = await supabase
         .from('posts')
         .select('*')
-        .limit(10)
+        .limit(50) // Increased limit to see more data
       
       console.log('Raw posts data:', rawPosts)
       console.log('Raw posts error:', rawError)
       
       if (rawPosts) {
-        console.log(`Found ${rawPosts.length} total posts in database`)
+        console.log(`\n📊 CATEGORY INVESTIGATION - Found ${rawPosts.length} total posts in database`)
+        
+        // Extract all unique categories
+        const allCategories = new Set<string>()
+        const categoryBreakdown: { [key: string]: number } = {}
+        
         rawPosts.forEach((post, index) => {
+          const category = post.category || 'NO_CATEGORY'
+          allCategories.add(category)
+          categoryBreakdown[category] = (categoryBreakdown[category] || 0) + 1
+          
           console.log(`Post ${index + 1}:`, {
             id: post.id,
-            title: post.title,
+            title: post.title?.substring(0, 50) + '...',
+            category: post.category,
             status: post.status,
-            created_at: post.created_at,
-            user_id: post.user_id
+            created_at: post.created_at
           })
         })
+        
+        console.log('\n🏷️ ALL UNIQUE CATEGORIES FOUND:')
+        console.log(Array.from(allCategories).sort())
+        
+        console.log('\n📈 CATEGORY BREAKDOWN (count per category):')
+        Object.entries(categoryBreakdown)
+          .sort(([,a], [,b]) => b - a)
+          .forEach(([category, count]) => {
+            console.log(`  "${category}": ${count} posts`)
+          })
+        
+        // Store categories in state for UI display
+        setCategories(Array.from(allCategories).sort())
+        setCategoryBreakdown(categoryBreakdown)
+        
+        // 2. Look specifically for theatre/arts/entertainment related posts
+        console.log('\n🎭 THEATRE/ARTS/ENTERTAINMENT SEARCH:')
+        const theatreKeywords = ['theatre', 'theater', 'arts', 'entertainment', 'review', 'cultural', 'performance']
+        
+        const potentialTheatrePosts = rawPosts.filter(post => {
+          const title = (post.title || '').toLowerCase()
+          const category = (post.category || '').toLowerCase()
+          const content = (post.content || '').toLowerCase()
+          
+          return theatreKeywords.some(keyword => 
+            title.includes(keyword) || 
+            category.includes(keyword) || 
+            content.includes(keyword)
+          )
+        })
+        
+        console.log(`Found ${potentialTheatrePosts.length} posts potentially related to theatre/arts/entertainment:`)
+        potentialTheatrePosts.forEach((post, index) => {
+          console.log(`  ${index + 1}. "${post.title}" - Category: "${post.category}"`)
+        })
+        
+        // 3. Check for hierarchical category patterns
+        console.log('\n🌳 HIERARCHICAL CATEGORY ANALYSIS:')
+        const hierarchicalCategories = Array.from(allCategories).filter(cat => cat.includes(' > '))
+        console.log(`Found ${hierarchicalCategories.length} hierarchical categories:`)
+        hierarchicalCategories.forEach(cat => {
+          console.log(`  "${cat}" (${categoryBreakdown[cat]} posts)`)
+        })
+        
+        // 4. Look for specific theatre review category
+        console.log('\n🎭 SPECIFIC THEATRE REVIEW CATEGORY CHECK:')
+        const theatreReviewCategories = Array.from(allCategories).filter(cat => 
+          cat.toLowerCase().includes('theatre') && cat.toLowerCase().includes('review')
+        )
+        console.log('Theatre review categories found:', theatreReviewCategories)
+        
+        // 5. Check the exact category that should match "Arts and Entertainment > Theatre > Reviews"
+        const expectedCategory = 'Arts and Entertainment > Theatre > Reviews'
+        const hasExpectedCategory = allCategories.has(expectedCategory)
+        console.log(`\n✅ Expected category "${expectedCategory}" exists: ${hasExpectedCategory}`)
+        
+        if (!hasExpectedCategory) {
+          console.log('❌ Expected category not found. Similar categories:')
+          Array.from(allCategories).forEach(cat => {
+            if (cat.toLowerCase().includes('arts') || 
+                cat.toLowerCase().includes('theatre') || 
+                cat.toLowerCase().includes('entertainment') ||
+                cat.toLowerCase().includes('review')) {
+              console.log(`  - "${cat}"`)
+            }
+          })
+        }
       }
       
-      // Now test with status filter
-      console.log('🔍 Checking published posts...')
-      const { data: publishedPosts, error: publishedError } = await supabase
+      // 6. Test the specific category query that's failing
+      console.log('\n🔍 Testing specific theatre reviews query...')
+      const { data: theatreReviews, error: theatreError } = await supabase
         .from('posts')
         .select('*')
         .eq('status', 'publish')
+        .eq('category', 'Arts and Entertainment > Theatre > Reviews')
         .limit(10)
       
-      console.log('Published posts:', publishedPosts)
-      console.log('Published error:', publishedError)
+      console.log('Theatre reviews query result:', theatreReviews)
+      console.log('Theatre reviews query error:', theatreError)
+      console.log(`Found ${theatreReviews?.length || 0} posts with exact category match`)
       
-      // Force switch to Supabase service
+      // 7. Try alternative theatre category queries
+      console.log('\n🔍 Trying alternative theatre category queries...')
+      const alternativeQueries = [
+        'Theatre Reviews',
+        'Reviews',
+        'Theatre',
+        'Arts and Entertainment'
+      ]
+      
+      for (const categoryTerm of alternativeQueries) {
+        const { data: altResults, error: altError } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('status', 'publish')
+          .eq('category', categoryTerm)
+          .limit(5)
+        
+        console.log(`Query for "${categoryTerm}": ${altResults?.length || 0} results`)
+        if (altResults && altResults.length > 0) {
+          console.log(`  Sample post: "${altResults[0].title}"`)
+        }
+      }
+      
+      // 8. Finally, test the service manager
+      console.log('\n🔄 Testing service manager...')
       newsManager.switchService('supabase')
-      
-      // Test fetching articles
       const testArticles = await newsManager.getLatestNewsForSlider(5)
       
       console.log('✅ Service manager result:', testArticles)
@@ -94,6 +196,26 @@ const SupabaseTest: React.FC = () => {
       >
         🔄 Test Supabase Connection
       </button>
+      
+      <button 
+        onClick={() => {
+          // Clear cache and force refresh
+          const { apiCache } = require('../utils/cache');
+          apiCache.clear();
+          window.location.reload();
+        }}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: '#ff9800',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          margin: '10px 0 10px 10px'
+        }}
+      >
+        🗑️ Clear Cache & Reload
+      </button>
 
       {loading && <div>⏳ Loading...</div>}
       
@@ -112,7 +234,62 @@ const SupabaseTest: React.FC = () => {
 
       {!loading && !error && (
         <div>
-          <h3>✅ Success! Found {articles.length} articles from Supabase:</h3>
+          <h3>🏷️ Database Categories Analysis</h3>
+          {categories.length > 0 && (
+            <div style={{
+              padding: '15px',
+              margin: '10px 0',
+              border: '2px solid #2196f3',
+              borderRadius: '8px',
+              backgroundColor: '#e3f2fd'
+            }}>
+              <h4>📊 All Categories Found ({categories.length} unique):</h4>
+              <div style={{ 
+                maxHeight: '200px', 
+                overflowY: 'auto',
+                backgroundColor: 'white',
+                padding: '10px',
+                borderRadius: '4px',
+                fontSize: '0.9rem'
+              }}>
+                {Object.entries(categoryBreakdown)
+                  .sort(([,a], [,b]) => b - a)
+                  .map(([category, count]) => (
+                    <div key={category} style={{ 
+                      padding: '2px 0',
+                      borderBottom: '1px solid #eee'
+                    }}>
+                      <strong>"{category}"</strong> - {count} post{count !== 1 ? 's' : ''}
+                    </div>
+                  ))}
+              </div>
+              
+              <div style={{ marginTop: '10px', fontSize: '0.9rem' }}>
+                <strong>🎭 Theatre-related categories:</strong>
+                {categories.filter(cat => 
+                  cat.toLowerCase().includes('theatre') || 
+                  cat.toLowerCase().includes('arts') || 
+                  cat.toLowerCase().includes('entertainment') ||
+                  cat.toLowerCase().includes('review')
+                ).length > 0 ? (
+                  <ul>
+                    {categories.filter(cat => 
+                      cat.toLowerCase().includes('theatre') || 
+                      cat.toLowerCase().includes('arts') || 
+                      cat.toLowerCase().includes('entertainment') ||
+                      cat.toLowerCase().includes('review')
+                    ).map(cat => (
+                      <li key={cat}>"{cat}" ({categoryBreakdown[cat]} posts)</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span style={{ color: '#d32f2f' }}> None found!</span>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <h3>✅ Sample Articles Found ({articles.length} articles):</h3>
           {articles.map((article, index) => (
             <div key={article.id || index} style={{
               padding: '10px',

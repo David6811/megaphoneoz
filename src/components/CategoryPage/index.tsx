@@ -1,19 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Typography, Box, Card, CardContent, CardMedia, CircularProgress, Alert } from '@mui/material';
-import { supabase } from '../../config/supabase';
+import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
+import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
 import Sidebar from '../Sidebar';
-
-interface Article {
-  id: string;
-  title: string;
-  content?: string;
-  excerpt?: string;
-  image?: string;
-  created_at: string;
-  category: string;
-  status: string;
-}
+import NewsCard from '../NewsCard';
 
 interface CategoryPageProps {
   title?: string;
@@ -23,12 +13,84 @@ interface CategoryPageProps {
 const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<FormattedNewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Simple URL to category name mapping (matching database values)
-  const URL_TO_CATEGORY: { [key: string]: string } = {
+  // Map URL paths to search categories for NewsServiceManager
+  const URL_TO_SEARCH_CATEGORY: { [key: string]: string } = {
+    '/category/news/localnews/': 'local',
+    '/category/news/nationalnews/': 'national', 
+    '/category/news/world/': 'world',
+    '/category/news/worldnews/': 'world',
+    '/category/news/features/': 'features',
+    '/category/news/featurednews/': 'features',
+    '/category/news/environment/': 'environment',
+    '/category/news/environmentnews/': 'environment',
+    '/category/news/media/': 'media',
+    '/category/news/medianews/': 'media',
+    '/news/local': 'local',
+    '/news/national': 'national',
+    '/news/world': 'world',
+    '/news/features': 'features',
+    '/news/environment': 'environment',
+    '/news/media': 'media',
+    '/category/artsentertainment/theatre/theatrereviews/': 'reviews',
+    '/category/artsentertainment/theatre/': 'theatre',
+    '/category/artsentertainment/games/': 'games',
+    '/category/artsentertainment/games-artsentertainment/': 'games',
+    '/category/artsentertainment/film/': 'film',
+    '/category/artsentertainment/filmreviews/': 'film',
+    '/category/artsentertainment/music/': 'music',
+    '/category/artsentertainment/musicreviews/': 'music',
+    '/category/artsentertainment/galleries/': 'galleries',
+    '/category/artsentertainment/galleries/exhibitions/': 'exhibitions',
+    '/category/artsentertainment/galleries/eye-on-the-street/': 'eye-on-the-street',
+    '/category/artsentertainment/galleries/eyeonthestreet/': 'eye-on-the-street',
+    '/category/artsentertainment/books/': 'books',
+    '/category/artsentertainment/drawn-and-quartered/': 'drawn-and-quartered',
+    '/category/lifestyle/food-and-wine/': 'food-and-wine',
+    '/category/lifestyle/foodandwine/': 'food-and-wine',
+    '/category/lifestyle/foodwine/': 'food-and-wine',
+    '/category/lifestyle/food-and-wine/restaurant-reviews/': 'restaurant-reviews',
+    '/category/lifestyle/foodandwine/restaurant-reviews/': 'restaurant-reviews',
+    '/category/lifestyle/foodwine/restaurant-reviews/': 'restaurant-reviews',
+    '/category/lifestyle/foodandwine/restaurantreviews/': 'restaurant-reviews',
+    '/category/lifestyle/foodwine/restaurantreviews/': 'restaurant-reviews',
+    '/category/lifestyle/food-and-wine/wine-match/': 'wine-match',
+    '/category/lifestyle/foodandwine/wine-match/': 'wine-match',
+    '/category/lifestyle/foodwine/wine-match/': 'wine-match',
+    '/category/lifestyle/foodandwine/winematch/': 'wine-match',
+    '/category/lifestyle/foodwine/winematch/': 'wine-match',
+    '/category/lifestyle/sport/': 'sport',
+    '/category/lifestyle/sports/': 'sport',
+    '/category/lifestyle/travel/': 'travel',
+    '/category/lifestyle/travels/': 'travel',
+    '/category/opinion/': 'opinion',
+    '/category/media/': 'media',
+    '/arts/games': 'games',
+    '/arts/theatre': 'theatre',
+    '/arts/theatre/reviews': 'reviews',
+    '/arts/film': 'film',
+    '/arts/music': 'music',
+    '/arts/galleries': 'galleries',
+    '/arts/galleries/exhibitions': 'exhibitions',
+    '/arts/galleries/eye-on-the-street': 'eye-on-the-street',
+    '/arts/books': 'books',
+    '/arts/drawn-and-quartered': 'drawn-and-quartered',
+    '/lifestyle/food-and-wine': 'food-and-wine',
+    '/lifestyle/food-and-wine/restaurant-reviews': 'restaurant-reviews',
+    '/lifestyle/food-and-wine/wine-match': 'wine-match',
+    '/lifestyle/sport': 'sport',
+    '/lifestyle/travel': 'travel',
+    '/opinion': 'opinion',
+    '/localnews': 'local',
+    '/drawn-and-quartered': 'drawn-and-quartered',
+    '/drawn-and-quartered/': 'drawn-and-quartered'
+  };
+
+  // Display title mapping
+  const URL_TO_DISPLAY_TITLE: { [key: string]: string } = {
     '/category/news/localnews/': 'News > Local',
     '/category/news/nationalnews/': 'News > National', 
     '/category/news/world/': 'News > World',
@@ -103,8 +165,8 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
   const getDisplayTitle = (): string => {
     if (title) return title;
     
-    const categoryName = URL_TO_CATEGORY[location.pathname];
-    return categoryName || 'Category';
+    const displayTitle = URL_TO_DISPLAY_TITLE[location.pathname];
+    return displayTitle || 'Category';
   };
 
   useEffect(() => {
@@ -116,34 +178,31 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
         console.log('=== 简化分类查询 ===');
         console.log('当前URL:', location.pathname);
         
-        // 直接从映射表获取分类名
-        const categoryName = URL_TO_CATEGORY[location.pathname];
-        console.log('映射到分类:', categoryName);
+        // 从映射表获取搜索分类
+        const searchCategory = URL_TO_SEARCH_CATEGORY[location.pathname];
+        console.log('映射到搜索分类:', searchCategory);
         
-        if (!categoryName) {
+        if (!searchCategory) {
           console.log('❌ 未找到分类映射');
           setArticles([]);
           return;
         }
 
-        console.log('🔍 查询数据库，分类:', categoryName);
+        console.log('🔍 使用 NewsServiceManager 查询分类:', searchCategory);
         
-        // 直接用分类名查询，不需要任何 ID 转换
-        const { data, error } = await supabase
-          .from('posts')
-          .select('*')
-          .eq('category', categoryName)  // 直接使用分类名
-          .eq('status', 'publish')
-          .order('created_at', { ascending: false });
+        // 使用 NewsServiceManager，就像搜索结果页面一样
+        const newsManager = NewsServiceManager.getInstance();
+        const categoryArticles = await newsManager.getLatestNewsByCategory(searchCategory, 10);
 
-        if (error) {
-          console.error('❌ 数据库查询错误:', error);
-          setArticles([]);
-          setError('Failed to load articles. Please try again later.');
-        } else {
-          console.log('✅ 找到文章:', data?.length || 0, '篇');
-          setArticles(data || []);
+        console.log('✅ 找到文章:', categoryArticles?.length || 0, '篇');
+        if (categoryArticles && categoryArticles.length > 0) {
+          console.log('📸 检查图片URL:', categoryArticles.map(article => ({
+            id: article.id,
+            title: article.title,
+            image: article.image
+          })));
         }
+        setArticles(categoryArticles || []);
       } catch (err) {
         console.error('❌ 查询异常:', err);
         setError('Failed to load articles. Please try again later.');
@@ -216,88 +275,19 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
                 </Typography>
               </Box>
             ) : (
-              <Box sx={{ mb: 4 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 4 }}>
                 {articles.map((article) => (
-                  <Card 
+                  <NewsCard
                     key={article.id}
-                    sx={{ 
-                      display: 'flex',
-                      mb: 3,
-                      cursor: 'pointer',
-                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }
-                    }}
+                    id={article.id}
+                    title={article.title}
+                    excerpt={article.excerpt}
+                    image={article.image}
+                    category={article.category}
+                    date={article.date}
+                    comments={0}
                     onClick={() => navigate(`/article/${article.id}`)}
-                  >
-                    {/* 左侧图片 */}
-                    {article.image && (
-                      <CardMedia
-                        component="img"
-                        sx={{ 
-                          width: { xs: 120, sm: 160, md: 200 },
-                          height: { xs: 90, sm: 120, md: 150 },
-                          objectFit: 'cover',
-                          flexShrink: 0
-                        }}
-                        image={article.image}
-                        alt={article.title}
-                      />
-                    )}
-                    
-                    {/* 右侧内容 */}
-                    <CardContent sx={{ 
-                      flex: 1, 
-                      display: 'flex', 
-                      flexDirection: 'column',
-                      p: { xs: 2, sm: 3 }
-                    }}>
-                      <Typography variant="h6" component="h2" gutterBottom sx={{ 
-                        fontWeight: 600,
-                        lineHeight: 1.3,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        mb: 1
-                      }}>
-                        {article.title}
-                      </Typography>
-                      
-                      {article.excerpt && (
-                        <Typography variant="body2" color="text.secondary" sx={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: { xs: 2, sm: 3 },
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          mb: 2,
-                          flexGrow: 1
-                        }}>
-                          {article.excerpt.replace(/<[^>]*>/g, '')}
-                        </Typography>
-                      )}
-                      
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        mt: 'auto'
-                      }}>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(article.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </Typography>
-                        <Typography variant="caption" color="primary.main" sx={{ fontWeight: 'bold' }}>
-                          READ MORE →
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
+                  />
                 ))}
               </Box>
             )}
