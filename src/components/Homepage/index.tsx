@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import FeaturedSlider from '../FeaturedSlider';
 import { HomepageProps, SlideData, Article, Comment } from '../../types';
 import NewsServiceManager, { FormattedNewsArticle } from '../../services/newsServiceManager';
+import { supabase } from '../../config/supabase';
 import { SimpleAuthSidebar } from '../Auth/SimpleAuthSidebar';
 import './Homepage.css';
 
@@ -11,6 +12,8 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
   const [featuredArticles, setFeaturedArticles] = useState<SlideData[]>([]);
   const [newsArticles, setNewsArticles] = useState<Article[]>([]);
   const [artsArticles, setArtsArticles] = useState<Article[]>([]);
+  const [recentArticles, setRecentArticles] = useState<{id: number, title: string}[]>([]);
+  const [recentComments, setRecentComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fallback data
@@ -141,6 +144,8 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
         setFeaturedArticles(fallbackFeaturedArticles);
         setNewsArticles(fallbackNewsArticles);
         setArtsArticles(fallbackArtsArticles);
+        setRecentArticles(fallbackRecentArticles);
+        setRecentComments(fallbackRecentComments);
         setLoading(false);
       }
       
@@ -231,6 +236,68 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             console.error('🎨 Error loading Arts articles (using fallback):', artsError);
           }
         }
+
+        // Fetch recent articles from Supabase
+        try {
+          console.log('📰 Fetching Recent Articles from Supabase...');
+          
+          const { data: recentPosts, error: recentError } = await supabase
+            .from('posts')
+            .select('id, title')
+            .eq('status', 'publish')
+            .order('created_at', { ascending: false })
+            .limit(7);
+
+          if (!recentError && recentPosts && recentPosts.length > 0 && !isCancelled) {
+            const recentArticlesData = recentPosts.map(post => ({
+              id: post.id,
+              title: post.title
+            }));
+            setRecentArticles(recentArticlesData);
+            console.log('📰 Successfully loaded Recent Articles from Supabase:', recentArticlesData.length);
+          } else if (!isCancelled) {
+            console.warn('📰 No recent articles found in Supabase, keeping fallback data');
+          }
+        } catch (recentError) {
+          if (!isCancelled) {
+            console.error('📰 Error loading Recent Articles (using fallback):', recentError);
+          }
+        }
+
+        // Fetch recent comments from Supabase
+        try {
+          console.log('💬 Fetching Recent Comments from Supabase...');
+          
+          const { data: comments, error: commentsError } = await supabase
+            .from('comments')
+            .select(`
+              id,
+              author_name,
+              created_at,
+              posts!inner (
+                id,
+                title
+              )
+            `)
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+          if (!commentsError && comments && comments.length > 0 && !isCancelled) {
+            const formattedComments: Comment[] = comments.map((comment: any) => ({
+              author: comment.author_name,
+              post: comment.posts.title
+            }));
+            setRecentComments(formattedComments);
+            console.log('💬 Successfully loaded Recent Comments from Supabase:', formattedComments.length);
+          } else if (!isCancelled) {
+            console.warn('💬 No recent comments found in Supabase, keeping fallback data');
+          }
+        } catch (commentsError) {
+          if (!isCancelled) {
+            console.error('💬 Error loading Recent Comments (using fallback):', commentsError);
+          }
+        }
         
       } catch (error) {
         if (!isCancelled) {
@@ -246,17 +313,19 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
     };
   }, []);
 
-  const recentArticles: string[] = [
-    "REVIEW: HAIRSPRAY",
-    "BACH ETERNAL PLAYS ON",
-    "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST",
-    "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS",
-    "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO",
-    "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE",
-    "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION"
+  // Fallback recent articles
+  const fallbackRecentArticles: {id: number, title: string}[] = [
+    { id: 1, title: "REVIEW: HAIRSPRAY" },
+    { id: 2, title: "BACH ETERNAL PLAYS ON" },
+    { id: 3, title: "REVIEW: SKANK SINATRA AT QTOPIA, DARLINGHURST" },
+    { id: 4, title: "SUANIME BRINGS WUTHERING WAVES CELEBRATION TO USYD CAMPUS" },
+    { id: 5, title: "REVIEW: L'HOTEL AT THE FOUNDRY, STAR CASINO" },
+    { id: 6, title: "REVIEW: EUREKA DAY AT THE SEYMOUR CENTRE" },
+    { id: 7, title: "SHREDDED TRUST: NATIONALS AND LIBERALS CLASH AFTER HISTORIC ELECTION" }
   ];
 
-  const recentComments: Comment[] = [
+  // Fallback recent comments
+  const fallbackRecentComments: Comment[] = [
     { author: "Zen", post: "SUAnime Brings Wuthering Waves Celebration to USYD Campus" },
     { author: "Навруува акот", post: "Food Review: Khanom House Delivers Subtle Sweet Indulgence" },
     { author: "Catherine", post: "Food Review: Khanom House Delivers Subtle Sweet Indulgence" },
@@ -419,8 +488,21 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             <div className="sidebar-section">
               <h3 className="sidebar-title">RECENT ARTICLES</h3>
               <ul className="recent-list">
-                {recentArticles.map((article: string, index: number) => (
-                  <li key={index}><a href="/articles" role="button" tabIndex={0}>{article}</a></li>
+                {recentArticles.map((article, index: number) => (
+                  <li key={index}>
+                    <a 
+                      href={`/article/${article.id}`} 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(`/article/${article.id}`);
+                      }}
+                      role="button" 
+                      tabIndex={0}
+                      style={{cursor: 'pointer'}}
+                    >
+                      {article.title}
+                    </a>
+                  </li>
                 ))}
               </ul>
             </div>
