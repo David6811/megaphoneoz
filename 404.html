@@ -20,9 +20,14 @@
       var search = location.search;
       var hash = location.hash;
       
-      if (path !== '/megaphoneoz/' && path !== '/megaphoneoz') {
+      if (path.startsWith('/megaphoneoz/') && path !== '/megaphoneoz/' && path !== '/megaphoneoz') {
+        // Store the full URL for React Router to handle
         sessionStorage.redirect = location.href;
-        location.replace('/megaphoneoz/' + (search ? search + '&' : '?') + 'redirect=' + encodeURIComponent(path + search + hash));
+        location.replace('/megaphoneoz/');
+      } else if (!path.startsWith('/megaphoneoz/')) {
+        // Redirect non-megaphoneoz paths to megaphoneoz
+        sessionStorage.redirect = 'https://david6811.github.io/megaphoneoz' + path + search + hash;
+        location.replace('/megaphoneoz/');
       }
     </script>
   </body>
