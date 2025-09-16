@@ -173,32 +173,62 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           console.error('Error loading WordPress news (using fallback):', newsError);
         }
 
-        // Fetch arts and entertainment articles with timeout
+        // Fetch arts and entertainment articles from multiple categories
         try {
-          const artsArticles = await fetchWithTimeout(
-            newsManager.getLatestNewsByCategory('arts-entertainment', 4)
-          );
+          console.log('🎨 Fetching Arts & Entertainment articles from Supabase...');
           
-          if (artsArticles && artsArticles.length > 0 && !isCancelled) {
-            const transformedArtsArticles: Article[] = artsArticles.map((article: FormattedNewsArticle) => ({
+          // List of arts categories to try (matching menu structure)
+          const artsCategories = [
+            'games',
+            'theatre', 
+            'film',
+            'music',
+            'galleries',
+            'books',
+            'reviews', // This exists in Supabase
+            'drawn-and-quartered'
+          ];
+          
+          let allArtsArticles: FormattedNewsArticle[] = [];
+          
+          // Try to fetch from each category
+          for (const category of artsCategories) {
+            try {
+              const categoryArticles = await fetchWithTimeout(
+                newsManager.getLatestNewsByCategory(category, 2)
+              );
+              if (categoryArticles && categoryArticles.length > 0) {
+                console.log(`✅ Found ${categoryArticles.length} articles in ${category}`);
+                allArtsArticles = allArtsArticles.concat(categoryArticles);
+              }
+            } catch (categoryError) {
+              console.log(`⚠️ No articles found in category: ${category}`);
+            }
+          }
+          
+          // Limit to 4 most recent articles
+          allArtsArticles = allArtsArticles.slice(0, 4);
+          
+          if (allArtsArticles.length > 0 && !isCancelled) {
+            const transformedArtsArticles: Article[] = allArtsArticles.map((article: FormattedNewsArticle) => ({
               id: article.id,
               title: article.title,
               date: article.date,
               image: article.image,
               excerpt: article.excerpt,
-              comments: 0,
+              comments: article.commentCount || 0,
               category: article.category,
               content: article.content,
               author: article.author
             }));
             setArtsArticles(transformedArtsArticles);
-            console.log('Successfully loaded WordPress arts articles:', artsArticles.length);
+            console.log('🎨 Successfully loaded Arts articles from Supabase:', allArtsArticles.length);
           } else if (!isCancelled) {
-            console.warn('No WordPress arts articles found, keeping fallback data');
+            console.warn('🎨 No Arts articles found in any category, keeping fallback data');
           }
         } catch (artsError) {
           if (!isCancelled) {
-            console.error('Error loading WordPress arts articles (using fallback):', artsError);
+            console.error('🎨 Error loading Arts articles (using fallback):', artsError);
           }
         }
         

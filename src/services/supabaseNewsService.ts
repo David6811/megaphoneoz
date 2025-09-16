@@ -324,7 +324,23 @@ class SupabaseNewsService {
   /**
    * Transform to FormattedNewsArticle
    */
-  private transformToFormattedArticle(post: any, author?: any): FormattedNewsArticle {
+  private async transformToFormattedArticle(post: any, author?: any): Promise<FormattedNewsArticle> {
+    // Get comment count from Supabase
+    let commentCount = 0;
+    try {
+      const { count, error } = await supabase
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', post.id)
+        .eq('status', 'approved');
+
+      if (!error && count !== null) {
+        commentCount = count;
+      }
+    } catch (err) {
+      console.error('Error getting comment count for post', post.id, err);
+    }
+
     return {
       id: post.id,
       title: this.stripHtmlTags(post.title || ''),
@@ -335,7 +351,8 @@ class SupabaseNewsService {
       slug: post.slug || post.title?.toLowerCase().replace(/\s+/g, '-') || `post-${post.id}`,
       link: `${window.location.origin}/posts/${post.id}`,
       content: post.content || '',
-      author: author ? this.transformToWordPressAuthor(author) : undefined
+      author: author ? this.transformToWordPressAuthor(author) : undefined,
+      commentCount: commentCount
     }
   }
 
@@ -403,7 +420,9 @@ class SupabaseNewsService {
         return []
       }
 
-      const articles = posts?.map(post => this.transformToFormattedArticle(post, null)) || []
+      const articles = await Promise.all(
+        posts?.map(post => this.transformToFormattedArticle(post, null)) || []
+      )
       
       console.log(`Successfully processed ${articles.length} articles for slider from Supabase`)
       apiCache.set(cacheKey, articles, 5)
@@ -524,10 +543,12 @@ class SupabaseNewsService {
           
         console.log(`Supabase final result for category ID ${categoryId}: ${posts.length} articles found`)
 
-        const articles = posts.map(post => {
-          const authorProfile = post.profiles || null;
-          return this.transformToFormattedArticle(post, authorProfile);
-        })
+        const articles = await Promise.all(
+          posts.map(post => {
+            const authorProfile = post.profiles || null;
+            return this.transformToFormattedArticle(post, authorProfile);
+          })
+        )
 
         console.log(`Successfully processed ${articles.length} articles for category ID ${categoryId} from Supabase`)
         apiCache.set(cacheKey, articles, 5)
@@ -600,7 +621,9 @@ class SupabaseNewsService {
         console.log(`Supabase: Found ${posts?.length || 0} posts for category "${categorySlug}"`)
         console.log(`Supabase: Post categories found:`, posts?.map(p => p.category))
 
-        const articles = posts?.map(post => this.transformToFormattedArticle(post, null)) || []
+        const articles = await Promise.all(
+          posts?.map(post => this.transformToFormattedArticle(post, null)) || []
+        )
 
         console.log(`Successfully processed ${articles.length} articles for category ${categorySlug} from Supabase`)
         apiCache.set(cacheKey, articles, 5)
@@ -640,7 +663,9 @@ class SupabaseNewsService {
           return []
         }
 
-        const articles = posts?.map(post => this.transformToFormattedArticle(post, null)) || []
+        const articles = await Promise.all(
+          posts?.map(post => this.transformToFormattedArticle(post, null)) || []
+        )
 
         console.log(`Successfully processed ${articles.length} search results for "${searchTerm}" from Supabase`)
         apiCache.set(cacheKey, articles, 5)
@@ -716,7 +741,7 @@ class SupabaseNewsService {
           console.log(`Supabase: Built author info for post ${postId}: ${authorName}`);
         }
 
-        const article = this.transformToFormattedArticle(post, authorProfile)
+        const article = await this.transformToFormattedArticle(post, authorProfile)
 
         console.log(`Successfully fetched post ${postId} from Supabase`)
         apiCache.set(cacheKey, article, 10)

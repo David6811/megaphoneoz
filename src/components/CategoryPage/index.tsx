@@ -169,6 +169,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
     return displayTitle || 'Category';
   };
 
+
   useEffect(() => {
     const fetchArticles = async () => {
       setLoading(true);
@@ -196,10 +197,11 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
 
         console.log('✅ 找到文章:', categoryArticles?.length || 0, '篇');
         if (categoryArticles && categoryArticles.length > 0) {
-          console.log('📸 检查图片URL:', categoryArticles.map(article => ({
+          console.log('📸 检查图片URL和评论数:', categoryArticles.map(article => ({
             id: article.id,
             title: article.title,
-            image: article.image
+            image: article.image,
+            commentCount: article.commentCount
           })));
         }
         setArticles(categoryArticles || []);
@@ -284,7 +286,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
                     excerpt={article.excerpt}
                     image={article.image}
                     date={article.date}
-                    comments={0}
+                    comments={article.commentCount || 0}
                     onClick={() => navigate(`/article/${article.id}`)}
                   />
                 ))}
