@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Card, CardMedia, CardContent, Pagination, Button, Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
-import WordPressNewsService, { FormattedNewsArticle, FormattedComment } from '../../services/wordpressNewsService';
+import NewsServiceManager, { FormattedNewsArticle, FormattedComment } from '../../services/newsServiceManager';
 import { Article, Comment } from '../../types';
 
 // Styled components following Material-First strategy
@@ -451,7 +451,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
       setArticles([]);
       
       try {
-        const newsService = WordPressNewsService.getInstance();
+        const newsService = NewsServiceManager.getInstance();
         
         // Add timeout to prevent hanging
         const fetchWithTimeout = async (promise: Promise<any>, timeoutMs: number = 8000) => {
@@ -505,7 +505,7 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
     // Fetch recent comments
     const fetchRecentComments = async () => {
       try {
-        const newsService = WordPressNewsService.getInstance();
+        const newsService = NewsServiceManager.getInstance();
         const comments = await newsService.fetchRecentComments(5);
         
         if (comments && comments.length > 0 && !isCancelled) {
@@ -535,6 +535,12 @@ const LocalNews: React.FC<LocalNewsProps> = ({ className = '' }) => {
   };
 
   const handleArticleClick = (article: Article) => {
+    console.log('LocalNews: Navigating to article:', {
+      id: article.id,
+      title: article.title,
+      url: `/article/${article.id}`
+    });
+    
     // Pass the full article data via state instead of just slug
     navigate(`/article/${article.id}`, { 
       state: { 
