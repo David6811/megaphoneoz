@@ -28,42 +28,42 @@ const HeaderWithWordPress: React.FC<HeaderProps> = ({ className = '' }) => {
     { label: 'News', href: '#', hasDropdown: true },
     { label: 'Lifestyle', href: '#', hasDropdown: true },
     { label: 'Arts and Entertainment', href: '#', hasDropdown: true },
-    { label: 'Opinion', href: '/category/opinion/' },
-    { label: 'Contact Us', href: '/contact' },
+    { label: 'Opinion', href: '/opinion' },
+    { label: 'Contact Us', href: '/contact-us' },
     { label: 'About Us', href: '/about-us' },
     { label: 'Coming Up', href: '/coming-up' },
   ];
 
   const fallbackNewsCategories = [
-    { label: 'Local', href: '/category/news/localnews' },
-    { label: 'National', href: '/category/news/nationalnews' },
-    { label: 'World', href: '/category/news/worldnews' },
-    { label: 'Features', href: '/category/news/featurednews/' },
-    { label: 'Environment', href: '/category/news/environment' },
-    { label: 'Media', href: '/category/media/' },
+    { label: 'Local', href: '/news/localnews' },
+    { label: 'National', href: '/news/nationalnews' },
+    { label: 'World', href: '/news/worldnews' },
+    { label: 'Features', href: '/news/featurednews' },
+    { label: 'Environment', href: '/news/environment' },
+    { label: 'Media', href: '/category/media' },
   ];
 
   const fallbackLifestyleCategories = [
-    { label: 'Food and Wine', href: '/category/lifestyle/foodwine', hasSubmenu: true, submenu: [
-      { label: 'Restaurant Reviews', href: '/category/lifestyle/foodwine/restaurantreviews' },
-      { label: 'Wine Match', href: '/category/lifestyle/foodwine/winematch/' },
+    { label: 'Food and Wine', href: '/lifestyle/foodwine', hasSubmenu: true, submenu: [
+      { label: 'Restaurant Reviews', href: '/lifestyle/foodwine/restaurantreviews' },
+      { label: 'Wine Match', href: '/lifestyle/foodwine/winematch' },
     ]},
-    { label: 'Sport', href: '/category/lifestyle/sport/' },
-    { label: 'Travel', href: '/category/lifestyle/travel/' },
+    { label: 'Sport', href: '/lifestyle/sport' },
+    { label: 'Travel', href: '/lifestyle/travel' },
   ];
 
   const fallbackArtsCategories = [
-    { label: 'Theatre', href: '/category/artsentertainment/theatre', hasSubmenu: true, submenu: [
-      { label: 'Reviews', href: '/category/artsentertainment/theatre/theatrereviews/' },
+    { label: 'Theatre', href: '/arts/theatre', hasSubmenu: true, submenu: [
+      { label: 'Reviews', href: '/arts/theatre/theatrereviews' },
     ]},
-    { label: 'Film', href: '/category/artsentertainment/filmreviews/' },
-    { label: 'Music', href: '/category/artsentertainment/musicreviews/' },
-    { label: 'Galleries', href: '/category/artsentertainment/galleries', hasSubmenu: true, submenu: [
-      { label: 'Exhibitions', href: '/category/artsentertainment/galleries/exhibitions/' },
-      { label: 'Eye On The Street', href: '/category/artsentertainment/galleries/eyeonthestreet/' },
+    { label: 'Film', href: '/arts/filmreviews' },
+    { label: 'Music', href: '/arts/musicreviews' },
+    { label: 'Galleries', href: '/arts/galleries', hasSubmenu: true, submenu: [
+      { label: 'Exhibitions', href: '/arts/galleries/exhibitions' },
+      { label: 'Eye On The Street', href: '/arts/galleries/eyeonthestreet' },
     ]},
-    { label: 'Books', href: '/category/artsentertainment/books/' },
-    { label: 'Games', href: '/category/artsentertainment/games/' },
+    { label: 'Books', href: '/arts/books' },
+    { label: 'Games', href: '/arts/games' },
   ];
 
   // Fetch WordPress menu data on component mount

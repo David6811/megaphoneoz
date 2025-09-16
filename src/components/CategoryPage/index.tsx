@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Typography, Box, Card, CardContent, CardMedia, CircularProgress, Alert } from '@mui/material';
 import { supabase } from '../../config/supabase';
 import Sidebar from '../Sidebar';
@@ -22,6 +22,7 @@ interface CategoryPageProps {
 
 const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -229,7 +230,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ title, description }) => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }
                     }}
-                    onClick={() => window.location.href = `/article/${article.id}`}
+                    onClick={() => navigate(`/article/${article.id}`)}
                   >
                     {/* 左侧图片 */}
                     {article.image && (
