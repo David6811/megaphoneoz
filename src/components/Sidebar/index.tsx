@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 import { SimpleAuthSidebar } from '../Auth/SimpleAuthSidebar';
 
@@ -13,6 +14,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
   const [searchTerm, setSearchTerm] = React.useState('')
+  const navigate = useNavigate()
 
   const recentArticles: string[] = [
     "REVIEW: HAIRSPRAY",
@@ -36,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
     e.preventDefault()
     if (searchTerm.trim()) {
       // Navigate to search results page or filter content
-      window.location.href = `/search?q=${encodeURIComponent(searchTerm.trim())}`
+      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`)
     }
   }
 
