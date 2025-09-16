@@ -27,7 +27,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
-  "homepage": "https://david6811.github.io/megaphoneoz",
+  "homepage": "https://david6811.github.io",
   "eslintConfig": {
     "extends": [
       "react-app",
