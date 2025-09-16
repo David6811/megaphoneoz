@@ -111,39 +111,49 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
   }
 
   return (
-    <div className={`sidebar-section ${className}`}>
-      <h3 className="sidebar-title">Member Login</h3>
+    <div className={`sidebar-section ${className}`} style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+      <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Member Login</h3>
       {message && (
         <div style={{ 
-          padding: '5px 0', 
+          padding: '10px 15px', 
           fontSize: '12px', 
-          color: message.includes('Success') ? 'green' : 'red',
-          textAlign: 'center'
+          color: message.includes('Success') ? '#28a745' : '#dc3545',
+          textAlign: 'center',
+          backgroundColor: message.includes('Success') ? '#d4edda' : '#f8d7da',
+          borderBottom: '1px solid #f0f0f0'
         }}>
           {message}
         </div>
       )}
       
       {!showLogin ? (
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ padding: '20px 15px', textAlign: 'center' }}>
           <button 
             onClick={() => setShowLogin(true)}
             style={{
               width: '100%',
-              padding: '8px',
-              marginBottom: '8px',
-              backgroundColor: '#c60800',
+              padding: '12px 16px',
+              backgroundColor: '#333',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#c60800';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#333';
             }}
           >
             Sign In / Sign Up
           </button>
         </div>
       ) : (
-        <div>
+        <div style={{ padding: '20px 15px' }}>
           <form onSubmit={handleSubmit}>
             <input
               type="email"
@@ -152,12 +162,16 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
               onChange={(e) => setEmail(e.target.value)}
               style={{
                 width: '100%',
-                padding: '8px',
-                marginBottom: '10px',
+                padding: '10px 12px',
+                marginBottom: '12px',
                 border: '1px solid #ddd',
                 borderRadius: '4px',
-                boxSizing: 'border-box'
+                fontSize: '14px',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s ease'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#c60800'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
             />
             {isSignUp && (
               <input
@@ -167,11 +181,22 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
                 onChange={(e) => setDisplayName(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '8px',
-                  marginBottom: '10px',
-                  border: '1px solid #ddd',
+                  padding: '10px 12px',
+                  marginBottom: '12px',
+                  border: '1px solid #e0e0e0',
                   borderRadius: '4px',
-                  boxSizing: 'border-box'
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s ease',
+                  background: '#fafafa'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#c60800';
+                  e.target.style.background = 'white';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e0e0e0';
+                  e.target.style.background = '#fafafa';
                 }}
               />
             )}
@@ -182,12 +207,16 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
               onChange={(e) => setPassword(e.target.value)}
               style={{
                 width: '100%',
-                padding: '8px',
-                marginBottom: '10px',
+                padding: '10px 12px',
+                marginBottom: '12px',
                 border: '1px solid #ddd',
                 borderRadius: '4px',
-                boxSizing: 'border-box'
+                fontSize: '14px',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s ease'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#c60800'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
             />
             {isSignUp && (
               <input
@@ -197,11 +226,22 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '8px',
-                  marginBottom: '10px',
-                  border: '1px solid #ddd',
+                  padding: '10px 12px',
+                  marginBottom: '12px',
+                  border: '1px solid #e0e0e0',
                   borderRadius: '4px',
-                  boxSizing: 'border-box'
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s ease',
+                  background: '#fafafa'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#c60800';
+                  e.target.style.background = 'white';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e0e0e0';
+                  e.target.style.background = '#fafafa';
                 }}
               />
             )}
@@ -210,14 +250,30 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
               disabled={loading}
               style={{
                 width: '100%',
-                padding: '8px',
-                marginBottom: '5px',
-                backgroundColor: '#c60800',
+                padding: '12px 16px',
+                marginBottom: '10px',
+                backgroundColor: loading ? '#999' : '#c60800',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.6 : 1
+                fontSize: '14px',
+                fontWeight: '500',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = '#a50600';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = '#c60800';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
               }}
             >
               {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
@@ -228,14 +284,28 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
               disabled={loading}
               style={{
                 width: '100%',
-                padding: '6px',
-                marginBottom: '5px',
+                padding: '10px 16px',
+                marginBottom: '8px',
                 backgroundColor: 'transparent',
                 color: '#c60800',
                 border: '1px solid #c60800',
                 borderRadius: '4px',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '12px'
+                fontSize: '12px',
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = '#c60800';
+                  e.currentTarget.style.color = 'white';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#c60800';
+                }
               }}
             >
               {isSignUp ? 'Have an account? Sign In' : "Don't have an account? Sign Up"}
@@ -246,13 +316,24 @@ export const SimpleAuthSidebar: React.FC<SimpleAuthSidebarProps> = ({ className 
               disabled={loading}
               style={{
                 width: '100%',
-                padding: '6px',
+                padding: '8px 16px',
                 backgroundColor: 'transparent',
                 color: '#666',
                 border: '1px solid #ddd',
                 borderRadius: '4px',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '12px'
+                fontSize: '12px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = '#f5f5f5';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
               }}
             >
               Cancel

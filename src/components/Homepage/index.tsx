@@ -480,39 +480,82 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
           {/* Right Column - Sidebar */}
           <aside className="sidebar">
             {/* Search */}
-            <div className="sidebar-section">
-              <form className="search-bar" onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
-                const searchTerm = formData.get('search') as string;
-                if (searchTerm?.trim()) {
-                  navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
-                }
-              }}>
-                <input type="text" name="search" placeholder="Search articles..." />
-                <button type="submit">🔍</button>
-              </form>
-            </div>
-
-            {/* Follow Us */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">FOLLOW US</h3>
-              <div className="social-icons">
-                <a href="http://www.facebook.com/MegaphoneOz" target="_blank" rel="noopener noreferrer" className="social-icon facebook">f</a>
-                <a href="https://www.flickr.com/photos/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon flickr">fl</a>
-                <a href="http://instagram.com/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon instagram">📷</a>
-                <a href="https://twitter.com/MegaphoneOZ" target="_blank" rel="noopener noreferrer" className="social-icon twitter">t</a>
-                <a href="https://www.youtube.com/channel/UCsp_yc-87m1D5BnUYCoxTAw" target="_blank" rel="noopener noreferrer" className="social-icon youtube">▶</a>
+            <div className="sidebar-section" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Search</h3>
+              <div style={{ padding: '15px' }}>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  const searchTerm = formData.get('search') as string;
+                  if (searchTerm?.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+                  }
+                }} style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    name="search" 
+                    placeholder="Search articles..." 
+                    style={{
+                      flex: 1,
+                      padding: '10px 12px',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      transition: 'border-color 0.2s ease',
+                      background: '#fafafa'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#c60800';
+                      e.target.style.background = 'white';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e0e0e0';
+                      e.target.style.background = '#fafafa';
+                    }}
+                  />
+                  <button 
+                    type="submit"
+                    style={{
+                      padding: '10px 16px',
+                      backgroundColor: '#333',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      transition: 'all 0.2s ease',
+                      minWidth: '50px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#c60800';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#333';
+                    }}
+                  >
+                    🔍
+                  </button>
+                </form>
               </div>
             </div>
 
-            {/* Auth Section */}
-            <SimpleAuthSidebar />
-
+            {/* Follow Us */}
+            <div className="sidebar-section" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Follow Us</h3>
+              <div style={{ padding: '15px', display: 'flex', justifyContent: 'center' }}>
+                <div className="social-icons">
+                  <a href="http://www.facebook.com/MegaphoneOz" target="_blank" rel="noopener noreferrer" className="social-icon facebook">f</a>
+                  <a href="https://www.flickr.com/photos/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon flickr">fl</a>
+                  <a href="http://instagram.com/megaphoneoz/" target="_blank" rel="noopener noreferrer" className="social-icon instagram">📷</a>
+                  <a href="https://twitter.com/MegaphoneOZ" target="_blank" rel="noopener noreferrer" className="social-icon twitter">t</a>
+                  <a href="https://www.youtube.com/channel/UCsp_yc-87m1D5BnUYCoxTAw" target="_blank" rel="noopener noreferrer" className="social-icon youtube">▶</a>
+                </div>
+              </div>
+            </div>
 
             {/* Recent Articles */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">RECENT ARTICLES</h3>
+            <div className="sidebar-section" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Recent Articles</h3>
               <ul className="recent-list">
                 {recentArticles.map((article, index: number) => (
                   <li key={index}>
@@ -534,8 +577,8 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
             </div>
 
             {/* Recent Comments */}
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">RECENT COMMENTS</h3>
+            <div className="sidebar-section" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ color: '#c60800', margin: 0, padding: '15px', fontSize: '14px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>Recent Comments</h3>
               <ul className="recent-comments">
                 {recentComments.map((comment: Comment, index: number) => (
                   <li key={index}>
@@ -544,6 +587,9 @@ const Homepage: React.FC<HomepageProps> = ({ className = '' }) => {
                 ))}
               </ul>
             </div>
+
+            {/* Auth Section - Moved to bottom */}
+            <SimpleAuthSidebar />
 
           </aside>
         </div>
